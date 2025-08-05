@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="32" viewBox="0 0 300 80" fill="none">
+  <style>
+    .text { font: bold 36px sans-serif; fill: #f3f4f6; opacity: 0.85; }
+    .dot { fill: #f97316; opacity: 0.85; }
+  </style>
+  <!-- Logo Mark -->
+  <circle class="dot" cx="40" cy="40" r="14" />
+  <path d="M40 12 A28 28 0 1 0 40.01 12" stroke="#f3f4f6" stroke-width="4" opacity="0.85" fill="none" />
+  <!-- Logo Text -->
+  <text class="text" x="70" y="50">MacroAI</text>
+</svg>

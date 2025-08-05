@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FiMenu, FiX } from 'react-icons/fi';
@@ -16,7 +17,14 @@ export default function Navbar() {
       }}
     >
       <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-        <div className="text-xl font-bold">🥦 MacroAI </div>
+        <Link href="/home" className="flex items-center space-x-2">
+          <Image
+            src="/logo.svg" // or "/logo.png"
+            alt=""
+            width={125}
+            height={32}
+          />
+        </Link>
 
         {/* Mobile toggle button */}
         <div className="sm:hidden">

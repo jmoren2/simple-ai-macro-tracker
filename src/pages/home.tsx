@@ -5,6 +5,7 @@ import { User } from '@/types/db/User';
 import { upperCaseFirstLetter } from '@/utils/utils';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
 import db from '../../db/db';
@@ -36,6 +37,7 @@ type Props = {
         email: string;
         name: string;
         calorie_goal: number;
+        isPremium: boolean;
     };
 };
 
@@ -51,6 +53,19 @@ export default function Home({ user }: Props) {
     const [alreadySavedToday, setAlreadySavedToday] = useState<FoodItem[]>([]);
     const localStorageDateKey = `macro-tracker-saved-date-${user.email}`;
     const localStorageItemsKey = `macro-tracker-items-${user.email}`;
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+    const [foodInputFocused, setFoodInputFocused] = useState(false);
+
+    useEffect(() => {
+        const fetchFoodNames = async () => {
+            const res = await fetch('/api/get-food-names');
+            const data = await res.json();
+            setSuggestions(data.names || []);
+        };
+
+        fetchFoodNames();
+    }, []);
 
     useEffect(() => {
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -210,15 +225,44 @@ export default function Home({ user }: Props) {
                                 </button>
                             </div>
                         )}
-
                         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                            <input
-                                type="text"
-                                placeholder="Food name"
-                                className="flex-1 border px-4 py-2 rounded bg-black text-white"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    placeholder="Food name"
+                                    className="w-full border px-4 py-2 rounded bg-black text-white"
+                                    value={name}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setName(val);
+                                        setFilteredSuggestions(
+                                            suggestions
+                                                .filter((s) => s.toLowerCase().includes(val.toLowerCase()))
+                                                .slice(0, 5)
+                                        );
+                                    }}
+                                    onFocus={() => setFoodInputFocused(true)}
+                                    onBlur={() => setTimeout(() => setFoodInputFocused(false), 100)}
+                                />
+                                {Boolean(user?.isPremium) && foodInputFocused && filteredSuggestions.length > 0 && (
+                                    <ul className="absolute z-10 left-0 right-0 mt-1 border border-gray-700 bg-[#1a1a1a] text-gray-300 rounded-lg shadow-lg overflow-hidden max-h-60 divide-y divide-gray-700">
+                                        {filteredSuggestions.map((sugg, idx) => (
+                                            <li
+                                                key={idx}
+                                                className="px-4 py-2 hover:bg-[#2a2a2a] hover:text-white cursor-pointer transition-colors text-sm"
+                                                onClick={() => {
+                                                    setName(sugg);
+                                                    setFilteredSuggestions([]);
+                                                }}
+                                            >
+                                                {sugg}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+
+                            {/* Calories input */}
                             <input
                                 type="text"
                                 placeholder="Calories"
@@ -226,6 +270,8 @@ export default function Home({ user }: Props) {
                                 value={calories}
                                 onChange={(e) => setCalories(e.target.value)}
                             />
+
+                            {/* Add button */}
                             <button
                                 className="px-4 py-2 rounded text-white"
                                 style={{ backgroundColor: '#f97316' }}
@@ -254,15 +300,24 @@ export default function Home({ user }: Props) {
                             onClick={analyzeItems}
                             disabled={items.length === 0 || loading}
                         >
-                            {loading ? 'Analyzing...' : 'Analyze Items'}
+                            {loading ? 'Analyzing...' : 'Analyze Food with AI'}
                         </button>
 
                         {result && (
                             <div className="mt-6">
-                                <h2 className="text-lg font-semibold mb-2">Result</h2>
-                                <pre className="bg-black text-green-400 text-sm p-4 rounded overflow-x-auto">
-                                    {JSON.stringify(result, null, 2)}
-                                </pre>
+                                <h2 className="text-lg font-semibold mb-2">Result
+                                    <Link href="/logs" className="ml-2 text-sm text-blue-400 hover:text-blue-300">
+                                        View Full Breakdown
+                                    </Link>
+
+                                </h2>
+                                {/* <h3 className="text-lg font-semibold text-green-600 mb-2">Daily Totals</h3> */}
+                                <ul className="space-y-1">
+                                    <li>🔥 Calories: <span className="font-bold">{result.total.calories}</span></li>
+                                    <li>🍗 Protein: <span className="font-bold">{result.total.protein}g</span></li>
+                                    <li>🍞 Carbs: <span className="font-bold">{result.total.carbs}g</span></li>
+                                    <li>🥑 Fat: <span className="font-bold">{result.total.fat}g</span></li>
+                                </ul>
 
                                 <div className="mt-4 text-center text-base">
                                     {(() => {
@@ -310,7 +365,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
         const user = db
-            .prepare('SELECT name, email, calorie_goal FROM users WHERE email = ?')
+            .prepare('SELECT name, email, calorie_goal, isPremium FROM users WHERE email = ?')
             .get(decoded.email) as User;
 
         if (!user) throw new Error('User not found');

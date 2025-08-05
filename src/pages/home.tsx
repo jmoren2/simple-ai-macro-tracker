@@ -1,5 +1,6 @@
 'use client';
 
+import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
@@ -101,6 +102,7 @@ export default function Home({ user }: Props) {
 
     return (
         <main className="min-h-screen bg-gray-100 p-6">
+            <Navbar />
             <div className="max-w-xl mx-auto bg-white shadow-xl rounded-xl p-6">
                 <h1 className="text-2xl font-bold mb-4 text-center text-gray-900">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-6">

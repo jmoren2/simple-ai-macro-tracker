@@ -1,5 +1,6 @@
 // db.ts
 import Database from 'better-sqlite3';
+import { runMigrations } from './migrate';
 
 const db = new Database('data.db'); // Will create data.db in project root
 
@@ -27,5 +28,15 @@ db.exec(`
     carbs INTEGER
   );
 `);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+runMigrations(db);
 
 export default db;

@@ -1,12 +1,7 @@
-import jwt from 'jsonwebtoken';
-import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
-
 export default function Index() {
-
   const router = useRouter();
   const [showForm, setShowForm] = useState<'create' | 'login' | false>(false);
   const [email, setEmail] = useState('');
@@ -61,21 +56,30 @@ export default function Index() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-4">Simple AI Macro Tracker</h1>
+    <main
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+    >
+      <div
+        className="shadow-lg rounded-lg p-6 w-full max-w-md text-center"
+        style={{ backgroundColor: '#2c2c2c' }} // brand.surface
+      >
+        <h1 className="text-2xl font-bold mb-4">Macro AI</h1>
+        <p className="mb-4">A simple AI macro tracker</p>
 
         {!showForm ? (
           <>
             <button
               onClick={() => setShowForm('create')}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              className="w-full px-6 py-2 rounded mb-2"
+              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
             >
               Create Account
             </button>
             <button
               onClick={() => setShowForm('login')}
-              className="bg-gray-600 text-white px-6 py-2 rounded mt-2 hover:bg-gray-700"
+              className="w-full px-6 py-2 rounded"
+              style={{ backgroundColor: '#444', color: 'white' }}
             >
               Login
             </button>
@@ -86,28 +90,29 @@ export default function Index() {
               <input
                 type="email"
                 placeholder="Email"
-                className="border px-4 py-2 rounded"
+                className="border px-4 py-2 rounded bg-black text-white"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="Name"
-                className="border px-4 py-2 rounded"
+                className="border px-4 py-2 rounded bg-black text-white"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
               <input
                 type="password"
                 placeholder="Password"
-                className="border px-4 py-2 rounded"
+                className="border px-4 py-2 rounded bg-black text-white"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 onClick={handleCreateUser}
                 disabled={loading || !email || !password}
-                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                className="px-6 py-2 rounded disabled:opacity-50"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
               >
                 {loading ? 'Creating...' : 'Create Account'}
               </button>
@@ -115,7 +120,7 @@ export default function Index() {
 
             <button
               onClick={() => setShowForm(false)}
-              className="text-sm text-gray-500 underline"
+              className="text-sm text-gray-400 underline"
             >
               Cancel
             </button>
@@ -126,21 +131,22 @@ export default function Index() {
               <input
                 type="email"
                 placeholder="Email"
-                className="border px-4 py-2 rounded"
+                className="border px-4 py-2 rounded bg-black text-white"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <input
                 type="password"
                 placeholder="Password"
-                className="border px-4 py-2 rounded"
+                className="border px-4 py-2 rounded bg-black text-white"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 onClick={handleLogin}
                 disabled={loading || !email || !password}
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="px-6 py-2 rounded disabled:opacity-50"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
               >
                 {loading ? 'Logging in...' : 'Login'}
               </button>
@@ -148,43 +154,16 @@ export default function Index() {
 
             <button
               onClick={() => setShowForm(false)}
-              className="text-sm text-gray-500 underline"
+              className="text-sm text-gray-400 underline"
             >
               Cancel
             </button>
           </>
         )}
 
-        {message && <p className="mt-4 text-green-600">{message}</p>}
-        {error && <p className="mt-4 text-red-600">{error}</p>}
+        {message && <p className="mt-4 text-green-400">{message}</p>}
+        {error && <p className="mt-4 text-red-500">{error}</p>}
       </div>
     </main>
   );
 }
-
-
-
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const cookieHeader = req.headers.cookie;
-
-  if (cookieHeader) {
-    const tokenMatch = cookieHeader.match(/token=([^;]+)/);
-    const token = tokenMatch?.[1];
-
-    if (token) {
-      try {
-        jwt.verify(token, JWT_SECRET);
-        return {
-          redirect: {
-            destination: '/home',
-            permanent: false,
-          },
-        };
-      } catch {
-        // invalid token, allow access
-      }
-    }
-  }
-
-  return { props: {} };
-};

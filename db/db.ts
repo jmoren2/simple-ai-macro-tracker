@@ -15,4 +15,17 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS food_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    name TEXT NOT NULL,
+    calories INTEGER,
+    protein INTEGER,
+    fat INTEGER,
+    carbs INTEGER
+  );
+`);
+
 export default db;

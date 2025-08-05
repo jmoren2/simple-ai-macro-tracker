@@ -4,8 +4,7 @@ import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
-import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
 import db from '../../db/db';
 import MacroPieChart from '../components/MacroPieChart';
@@ -49,6 +48,16 @@ export default function Home({ user }: Props) {
     const [result, setResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        const saved = localStorage.getItem('macro-tracker-items');
+        if (saved) {
+            setItems(JSON.parse(saved));
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('macro-tracker-items', JSON.stringify(items));
+    }, [items]);
 
     const saveGoal = async () => {
         const res = await fetch('/api/update-calorie-goal', {
@@ -58,11 +67,8 @@ export default function Home({ user }: Props) {
         });
 
         const data = await res.json();
-        if (!res.ok) {
-            console.log(data.error || 'Failed to update goal');
-        } else {
-            console.log('Goal saved!');
-        }
+        if (!res.ok) console.log(data.error || 'Failed to update goal');
+        else console.log('Goal saved!');
 
         setGoalSubmitted(true);
         setUpdatingGoal(false);
@@ -70,10 +76,8 @@ export default function Home({ user }: Props) {
 
     const addItem = () => {
         if (!name) return;
-
         const parsed = parseInt(calories, 10);
         const value: number | 'unknown' = isNaN(parsed) ? 'unknown' : parsed;
-
         setItems([...items, { name, calories: value }]);
         setName('');
         setCalories('');
@@ -92,51 +96,59 @@ export default function Home({ user }: Props) {
         const data = await res.json();
         setResult(data);
         setLoading(false);
+
+        // Save to database
+        if (res.ok && data?.total) {
+            await fetch('/api/save-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items,
+                    result: data,
+                }),
+            });
+        }
     };
 
     const caloriesRemaining = () => {
         if (!result?.total?.calories) return null;
-        const remaining = calorieGoal - result.total.calories;
-        return remaining;
+        return calorieGoal - result.total.calories;
     };
 
     return (
-        <main className="min-h-screen bg-gray-100 p-6">
+        <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             <Navbar />
-            <div className="max-w-xl mx-auto bg-white shadow-xl rounded-xl p-6">
-                <h1 className="text-2xl font-bold mb-4 text-center text-gray-900">🧠 Simple AI Macro Tracker</h1>
+            <div className="max-w-xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
+                <h1 className="text-2xl font-bold mb-4 text-center">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-6">
-                    <p className="text-gray-700">Welcome, {user.name || user.email}!</p>
-                    <Link href="/logout" className="text-blue-600 hover:underline">
-                        Logout
-                    </Link>
+                    <p>Welcome, {user.name || user.email}!</p>
                 </div>
 
                 {!goalSubmitted ? (
                     <div className="flex flex-col items-center gap-4">
-                        <p className="text-center text-gray-800">Whats your calorie goal for the day?</p>
+                        <p>Whats your calorie goal for the day?</p>
                         <input
                             type="number"
                             placeholder="e.g. 2200"
-                            className="w-48 border px-4 py-2 rounded text-center text-gray-600"
+                            className="w-48 border px-4 py-2 rounded text-center bg-black text-white"
                             value={calorieGoal}
                             onChange={(e) => setCalorieGoal(parseInt(e.target.value))}
                         />
                         <button
-                            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-                            onClick={() => saveGoal()}
+                            className="px-6 py-2 rounded text-white"
+                            style={{ backgroundColor: '#f97316' }}
+                            onClick={saveGoal}
                         >
                             Continue
                         </button>
                     </div>
                 ) : (
                     <>
-                        <p className="mb-4 text-gray-900 text-center">
+                        <p className="mb-4 text-center">
                             🎯 Daily Goal: <strong>{calorieGoal} cal</strong>
                             <button
                                 onClick={() => setUpdatingGoal(true)}
-                                className="ml-2 text-blue-600 hover:text-blue-800"
-                                title="Edit Goal"
+                                className="ml-2 text-orange-400 hover:text-orange-300"
                             >
                                 <FaPencilAlt className="inline mr-1" size={10} />
                             </button>
@@ -146,36 +158,38 @@ export default function Home({ user }: Props) {
                             <div className="mb-4 flex gap-2 items-center justify-center">
                                 <input
                                     type="number"
-                                    className="border px-4 py-2 rounded text-center w-32 text-gray-600"
+                                    className="border px-4 py-2 rounded text-center w-32 bg-black text-white"
                                     value={calorieGoal}
                                     onChange={(e) => setCalorieGoal(parseInt(e.target.value))}
                                 />
                                 <button
                                     onClick={saveGoal}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                    className="px-4 py-2 rounded text-white"
+                                    style={{ backgroundColor: '#f97316' }}
                                 >
                                     Save
                                 </button>
                             </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row gap-2 mb-4 text-gray-600">
+                        <div className="flex flex-col sm:flex-row gap-2 mb-4">
                             <input
                                 type="text"
                                 placeholder="Food name"
-                                className="flex-1 border px-4 py-2 rounded"
+                                className="flex-1 border px-4 py-2 rounded bg-black text-white"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                             />
                             <input
                                 type="text"
                                 placeholder="Calories"
-                                className="w-32 border px-4 py-2 rounded"
+                                className="w-32 border px-4 py-2 rounded bg-black text-white"
                                 value={calories}
-                                onChange={(e) => setCalories(isNaN(parseInt(e.target.value, 10)) ? 'unknown' : e.target.value)}
+                                onChange={(e) => setCalories(e.target.value)}
                             />
                             <button
-                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                className="px-4 py-2 rounded text-white"
+                                style={{ backgroundColor: '#f97316' }}
                                 onClick={addItem}
                             >
                                 Add
@@ -184,7 +198,7 @@ export default function Home({ user }: Props) {
 
                         <ul className="mb-4">
                             {items.map((item, idx) => (
-                                <li key={idx} className="flex justify-between border-b py-1 text-sm text-gray-700">
+                                <li key={idx} className="flex justify-between border-b border-gray-700 py-1 text-sm">
                                     <span>{item.name}</span>
                                     <span>
                                         {typeof item.calories === 'number' && !isNaN(item.calories)
@@ -196,7 +210,8 @@ export default function Home({ user }: Props) {
                         </ul>
 
                         <button
-                            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                            className="w-full py-2 rounded text-white disabled:opacity-50"
+                            style={{ backgroundColor: '#22c55e' }}
                             onClick={analyzeItems}
                             disabled={items.length === 0 || loading}
                         >
@@ -205,14 +220,12 @@ export default function Home({ user }: Props) {
 
                         {result && (
                             <div className="mt-6">
-                                <h2 className="text-lg font-semibold mb-2 text-gray-900">Result</h2>
-                                <pre className="bg-gray-800 text-green-100 text-sm p-4 rounded overflow-x-auto">
+                                <h2 className="text-lg font-semibold mb-2">Result</h2>
+                                <pre className="bg-black text-green-400 text-sm p-4 rounded overflow-x-auto">
                                     {JSON.stringify(result, null, 2)}
                                 </pre>
 
-
-
-                                <div className="mt-4 text-center text-gray-900 text-base">
+                                <div className="mt-4 text-center text-base">
                                     {(() => {
                                         const remaining = caloriesRemaining();
                                         if (remaining === null) return null;
@@ -230,9 +243,9 @@ export default function Home({ user }: Props) {
                                                         />
                                                     </div>
                                                 ) : remaining < 0 ? (
-                                                    <p>⚠️ Youve gone <strong>{Math.abs(remaining)} cal</strong> over your goal.</p>
+                                                    <p>⚠️ You've gone <strong>{Math.abs(remaining)} cal</strong> over your goal.</p>
                                                 ) : (
-                                                    <p>🎉 Youve hit your calorie goal exactly!</p>
+                                                    <p>🎉 You've hit your calorie goal exactly!</p>
                                                 )}
                                             </>
                                         );
@@ -243,11 +256,9 @@ export default function Home({ user }: Props) {
                     </>
                 )}
             </div>
-        </main>
+        </div>
     );
 }
-
-
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const cookieHeader = req.headers.cookie;
@@ -259,12 +270,11 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
-        const user = db.prepare('SELECT name, email, calorie_goal FROM users WHERE email = ?').get(decoded.email) as User;
-        console.log('user found:', user);
-
+        const user = db
+            .prepare('SELECT name, email, calorie_goal FROM users WHERE email = ?')
+            .get(decoded.email) as User;
 
         if (!user) throw new Error('User not found');
-
         return { props: { user } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };

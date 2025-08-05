@@ -47,17 +47,43 @@ export default function Home({ user }: Props) {
     const [calories, setCalories] = useState('');
     const [result, setResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
+    const [alreadySavedToday, setAlreadySavedToday] = useState<FoodItem[]>([]);
+    const localStorageDateKey = `macro-tracker-saved-date-${user.email}`;
+    const localStorageItemsKey = `macro-tracker-items-${user.email}`;
 
     useEffect(() => {
-        const saved = localStorage.getItem('macro-tracker-items');
-        if (saved) {
-            setItems(JSON.parse(saved));
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const lastSavedDate = localStorage.getItem(localStorageDateKey);
+        const lastSavedItems = localStorage.getItem(localStorageItemsKey);
+
+        const hydrateFromDB = async () => {
+            const res = await fetch(`/api/get-food-logs?date=${today}`);
+            const data = await res.json();
+
+            if (data?.logs?.length > 0) {
+                localStorage.setItem(localStorageDateKey, today);
+                localStorage.setItem(localStorageItemsKey, JSON.stringify(data.logs));
+                setItems(data.logs); // React state for visible input
+                setAlreadySavedToday(data.logs); // Track what’s been saved to DB
+            }
+        };
+
+        if (lastSavedDate !== today) {
+            // New day — clear saved items
+            localStorage.removeItem(localStorageItemsKey);
+            localStorage.setItem(localStorageDateKey, today);
+            hydrateFromDB();
+        } else if (!lastSavedItems) {
+            hydrateFromDB();
+        } else {
+            setItems(JSON.parse(lastSavedItems));
+            setAlreadySavedToday(JSON.parse(lastSavedItems)); // Also hydrate saved state
         }
-    }, []);
+    }, [localStorageDateKey, localStorageItemsKey, user.email]);
 
     useEffect(() => {
-        localStorage.setItem('macro-tracker-items', JSON.stringify(items));
-    }, [items]);
+        localStorage.setItem(localStorageItemsKey, JSON.stringify(items));
+    }, [items, localStorageItemsKey]);
 
     const saveGoal = async () => {
         const res = await fetch('/api/update-calorie-goal', {
@@ -88,8 +114,7 @@ export default function Home({ user }: Props) {
         setResult(null);
 
         // 1. Load saved items from localStorage
-        const savedItemsJson = localStorage.getItem('saved-items');
-        const savedItems: FoodItem[] = savedItemsJson ? JSON.parse(savedItemsJson) : [];
+        const savedItems = alreadySavedToday;
 
         // 2. Filter out items that are already saved
         const newItems = items.filter(
@@ -119,7 +144,7 @@ export default function Home({ user }: Props) {
 
             // 5. Update local saved items
             const updatedSaved = [...savedItems, ...newItems];
-            localStorage.setItem('saved-items', JSON.stringify(updatedSaved));
+            localStorage.setItem(localStorageItemsKey, JSON.stringify(updatedSaved));
         }
     };
 

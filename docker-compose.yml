@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  nextjs:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: simple-ai-macro-tracker
+    restart: always
+    ports:
+      - "4000:3000"
+    volumes:
+      - .:/home/node/app
+      - /home/node/app/node_modules
+    command: npm run dev

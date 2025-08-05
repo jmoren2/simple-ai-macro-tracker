@@ -1,9 +1,9 @@
 'use client';
 
-import MacroPieChart from '@/components/MacroPieChart';
 import { getCookie, setCookie } from 'cookies-next';
 import { useEffect, useState } from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
+import MacroPieChart from '../components/MacroPieChart';
 
 type FoodItem = {
   name: string;

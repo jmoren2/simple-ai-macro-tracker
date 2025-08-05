@@ -87,6 +87,18 @@ export default function Home({ user }: Props) {
         setLoading(true);
         setResult(null);
 
+        // 1. Load saved items from localStorage
+        const savedItemsJson = localStorage.getItem('saved-items');
+        const savedItems: FoodItem[] = savedItemsJson ? JSON.parse(savedItemsJson) : [];
+
+        // 2. Filter out items that are already saved
+        const newItems = items.filter(
+            (item) => !savedItems.some(
+                (saved) => saved.name === item.name && saved.calories === item.calories
+            )
+        );
+
+        // 3. Analyze all items regardless
         const res = await fetch('/api/analyze-calories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -97,16 +109,17 @@ export default function Home({ user }: Props) {
         setResult(data);
         setLoading(false);
 
-        // Save to database
-        if (res.ok && data?.total) {
+        // 4. Only send new items to DB
+        if (newItems.length > 0) {
             await fetch('/api/save-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    items,
-                    result: data,
-                }),
+                body: JSON.stringify({ items: newItems, result: data }),
             });
+
+            // 5. Update local saved items
+            const updatedSaved = [...savedItems, ...newItems];
+            localStorage.setItem('saved-items', JSON.stringify(updatedSaved));
         }
     };
 
@@ -243,9 +256,9 @@ export default function Home({ user }: Props) {
                                                         />
                                                     </div>
                                                 ) : remaining < 0 ? (
-                                                    <p>⚠️ You've gone <strong>{Math.abs(remaining)} cal</strong> over your goal.</p>
+                                                    <p>⚠️ Youve gone <strong>{Math.abs(remaining)} cal</strong> over your goal.</p>
                                                 ) : (
-                                                    <p>🎉 You've hit your calorie goal exactly!</p>
+                                                    <p>🎉 Youve hit your calorie goal exactly!</p>
                                                 )}
                                             </>
                                         );

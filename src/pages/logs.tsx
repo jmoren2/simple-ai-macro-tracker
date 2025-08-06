@@ -24,7 +24,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
   return (
     <div className="min-h-screen bg-brand-bg text-brand-text p-4">
       <Navbar />
-      <div className="max-w-2xl mx-auto bg-brand-surface rounded-xl p-4 shadow-md">
+      <div className="max-w-2xl mx-auto bg-brand-surface rounded-xl p-4 shadow-md mt-8" style={{ backgroundColor: '#2c2c2c' }}>
         <h1 className="text-2xl font-bold text-center mb-6 text-brand-accent">📅 Daily Logs</h1>
 
         {Object.keys(logsByDate).length === 0 ? (
@@ -54,7 +54,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
                   {entries.map((log, i) => (
                     <li
                       key={i}
-                      className="flex justify-between items-center bg-brand-bg border border-brand-muted rounded px-3 py-2 text-sm"
+                      className="flex justify-between items-center border-b border-gray-700 text-xs"
                     >
                       <span>{log.name}</span>
                       <span className="text-xs text-brand-muted text-right whitespace-nowrap">

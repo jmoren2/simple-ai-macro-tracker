@@ -173,7 +173,7 @@ export default function Home({ user, dailyTotals }: Props) {
     return (
         <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             <Navbar />
-            <div className="max-w-xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
+            <div className="max-w-2xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
                 <h1 className="text-2xl font-bold mb-2 text-center">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-2">
                     <p>Welcome, {upperCaseFirstLetter(user?.name) || user?.email}!</p>

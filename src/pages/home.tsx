@@ -34,7 +34,7 @@ type Result = {
 
 type Props = {
     user: User;
-    totalCaloriesToday: { total: number | null };
+    totalCaloriesToday: number | null;
 };
 
 export default function Home({ user, totalCaloriesToday }: Props) {
@@ -202,7 +202,8 @@ export default function Home({ user, totalCaloriesToday }: Props) {
                             >
                                 <FaPencilAlt className="inline mr-1" size={10} />
                             </button><br />
-                            Calories Logged Today: <strong>{totalCaloriesToday?.total || 0} cal</strong>
+                            Calories eaten today: <strong className={`text-${totalCaloriesToday && totalCaloriesToday < calorieGoal ? 'green' : 'red'}-500`}>{totalCaloriesToday ?? 0} cal</strong><br />
+                            Calories remaining: <strong>{totalCaloriesToday ? calorieGoal - totalCaloriesToday : calorieGoal} cal</strong>
                         </p>
 
                         {updatingGoal && (
@@ -363,9 +364,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
         const totalCaloriesToday = db
             .prepare('SELECT SUM(calories) as total FROM food_logs WHERE user_id = ? AND date = ?')
-            .get(user.id, new Date().toISOString().split('T')[0]);
+            .get(user.id, new Date().toISOString().split('T')[0]) as { total: number | null };
 
-        return { props: { user, totalCaloriesToday } };
+        return { props: { user, totalCaloriesToday: totalCaloriesToday.total } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };
     }

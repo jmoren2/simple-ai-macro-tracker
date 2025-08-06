@@ -68,7 +68,7 @@ export default function Home({ user }: Props) {
     }, []);
 
     useEffect(() => {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const today = new Date().toISOString();
         const lastSavedDate = localStorage.getItem(localStorageDateKey);
         const lastSavedItems = localStorage.getItem(localStorageItemsKey);
 

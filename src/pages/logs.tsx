@@ -7,17 +7,17 @@ import db from '../../db/db';
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
 
 type FoodLog = {
-    date: string;
-    name: string;
-    calories: number | null;
-    protein: number | null;
-    fat: number | null;
-    carbs: number | null;
+  date: string;
+  name: string;
+  calories: number | null;
+  protein: number | null;
+  fat: number | null;
+  carbs: number | null;
 };
 
 type Props = {
-    logsByDate: Record<string, FoodLog[]>;
-    calorieGoal: number;
+  logsByDate: Record<string, FoodLog[]>;
+  calorieGoal: number;
 };
 
 export default function Logs({ logsByDate, calorieGoal }: Props) {
@@ -44,7 +44,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
             return (
               <div key={date} className="mb-6">
                 <div className="flex justify-between items-center border-b border-brand-muted pb-1 mb-2">
-                  <h2 className="text-lg font-semibold text-brand-accent">{date}</h2>
+                  <h2 className="text-md font-semibold text-brand-accent">{date}</h2>
                   <div className={`text-sm text-brand-muted text-right ${totals.calories > calorieGoal ? 'text-red-500' : 'text-green-500'}`}>
                     {totals.calories} cal<br />
                     {totals.protein}p · {totals.carbs.toFixed(1)}c · {totals.fat.toFixed(1)}f
@@ -58,8 +58,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
                     >
                       <span>{log.name}</span>
                       <span className="text-xs text-brand-muted text-right whitespace-nowrap">
-                        {log.calories ?? '?'} cal<br />
-                        {log.protein ?? '?'}p · {log.carbs ?? '?'}c · {log.fat ?? '?'}f
+                        {log.calories ?? '?'} cal · {log.protein ?? '?'}p · {log.carbs ?? '?'}c · {log.fat ?? '?'}f
                       </span>
                     </li>
                   ))}
@@ -75,43 +74,43 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const cookieHeader = req.headers.cookie;
-    const token = cookieHeader?.match(/token=([^;]+)/)?.[1];
+  const cookieHeader = req.headers.cookie;
+  const token = cookieHeader?.match(/token=([^;]+)/)?.[1];
 
-    if (!token) {
-        return { redirect: { destination: '/', permanent: false } };
+  if (!token) {
+    return { redirect: { destination: '/', permanent: false } };
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    const userId = decoded.id;
+
+    //get user data
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as User | undefined;
+    if (!user) {
+      return { redirect: { destination: '/', permanent: false } };
     }
+    const calorieGoal = user.calorie_goal;
 
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-        const userId = decoded.id;
-
-        //get user data
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as User | undefined;
-        if (!user) {
-            return { redirect: { destination: '/', permanent: false } };
-        }
-        const calorieGoal = user.calorie_goal;
-
-        const rows = db
-            .prepare(
-                `SELECT date, name, calories, protein, fat, carbs
+    const rows = db
+      .prepare(
+        `SELECT created_at, name, calories, protein, fat, carbs
          FROM food_logs
          WHERE user_id = ?
-         ORDER BY date DESC`
-            )
-            .all(userId) as FoodLog[];
+         ORDER BY created_at DESC`
+      )
+      .all(userId) as FoodLog[];
 
-        const logsByDate: Record<string, FoodLog[]> = {};
-        for (const row of rows) {
-            if (!logsByDate[row.date]) logsByDate[row.date] = [];
-            logsByDate[row.date].push(row);
-        }
-
-        return { props: { logsByDate, calorieGoal } };
-    } catch (err) {
-      console.log(err);
-
-        return { redirect: { destination: '/', permanent: false } };
+    const logsByDate: Record<string, FoodLog[]> = {};
+    for (const row of rows) {
+      if (!logsByDate[row.date]) logsByDate[row.date] = [];
+      logsByDate[row.date].push(row);
     }
+
+    return { props: { logsByDate, calorieGoal } };
+  } catch (err) {
+    console.log(err);
+
+    return { redirect: { destination: '/', permanent: false } };
+  }
 };

@@ -15,11 +15,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const userId = decoded.id;
     const { items, result } = req.body;
 
-    const date = new Date().toISOString().split('T')[0];
+    const date = new Date().toISOString();
 
     const insert = db.prepare(`
-      INSERT INTO food_logs (user_id, date, name, calories, protein, fat, carbs)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO food_logs (user_id, name, calories, protein, fat, carbs)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     for (const item of items) {
@@ -30,7 +30,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
       insert.run(
         userId,
-        date,
         item.name,
         typeof breakdown?.calories === 'number' ? breakdown.calories : null,
         breakdown?.protein ?? null,

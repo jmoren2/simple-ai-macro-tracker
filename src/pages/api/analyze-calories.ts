@@ -75,7 +75,7 @@ async function getCaloriesForItem(name: string): Promise<number> {
         return calorieCache.get(name.toLowerCase())!;
     }
 
-    const prompt = `How many calories are in ${name}? Respond with just the number. No units, no explanation.`;
+    const prompt = `How many calories are in ${name}? Respond with just the number. No units, no explanation. If the item is not food, respond with 0.`;
     const result = await model.generateContent(prompt);
     const raw = result.response.text()?.trim();
     const match = raw.match(/\d+/);

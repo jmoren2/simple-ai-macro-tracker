@@ -20,6 +20,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
         return res.status(200).json({ success: true });
     } catch (err) {
+        console.log(err);
+
         return res.status(401).json({ error: 'Invalid token' });
     }
 }

@@ -13,6 +13,7 @@ export async function getUserFromRequest(req: NextApiRequest, res: NextApiRespon
         const user = jwt.verify(token, JWT_SECRET);
         return user;
     } catch (err) {
+        console.log(err);
         return null;
     }
 }

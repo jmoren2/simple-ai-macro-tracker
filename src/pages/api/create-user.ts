@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(201).json({
             user: { id: result.lastInsertRowid, email, name },
         });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
         if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
             return res.status(409).json({ error: 'Email already exists' });

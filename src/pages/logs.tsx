@@ -110,6 +110,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
         return { props: { logsByDate, calorieGoal } };
     } catch (err) {
+      console.log(err);
+
         return { redirect: { destination: '/', permanent: false } };
     }
 };

@@ -75,7 +75,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const cookieHeader = req.headers.cookie;
-  const token = cookieHeader?.match(/token=([^;]+)/)?.[1];
+  const token = cookieHeader?.match(/macroAIToken=([^;]+)/)?.[1];
 
   if (!token) {
     return { redirect: { destination: '/', permanent: false } };

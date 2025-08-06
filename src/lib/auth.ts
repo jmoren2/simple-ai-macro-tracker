@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
 
 export async function getUserFromRequest(req: NextApiRequest, res: NextApiResponse) {
-    const token = await getCookie('token', { req, res });
+    const token = await getCookie('macroAIToken', { req, res });
     if (!token || typeof token !== 'string') return null;
 
     try {

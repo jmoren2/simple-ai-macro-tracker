@@ -33,16 +33,12 @@ type Result = {
 };
 
 type Props = {
-    user: {
-        email: string;
-        name: string;
-        calorie_goal: number;
-        isPremium: boolean;
-    };
+    user: User;
+    totalCaloriesToday: { total: number | null };
 };
 
-export default function Home({ user }: Props) {
-    const [calorieGoal, setCalorieGoal] = useState(user.calorie_goal);
+export default function Home({ user, totalCaloriesToday }: Props) {
+    const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
     const [items, setItems] = useState<FoodItem[]>([]);
@@ -51,8 +47,8 @@ export default function Home({ user }: Props) {
     const [result, setResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
     const [alreadySavedToday, setAlreadySavedToday] = useState<FoodItem[]>([]);
-    const localStorageDateKey = `macro-tracker-saved-date-${user.email}`;
-    const localStorageItemsKey = `macro-tracker-items-${user.email}`;
+    const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
+    const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
     const [foodInputFocused, setFoodInputFocused] = useState(false);
@@ -95,7 +91,7 @@ export default function Home({ user }: Props) {
             setItems(JSON.parse(lastSavedItems));
             setAlreadySavedToday(JSON.parse(lastSavedItems)); // Also hydrate saved state
         }
-    }, [localStorageDateKey, localStorageItemsKey, user.email]);
+    }, [localStorageDateKey, localStorageItemsKey, user?.email]);
 
     useEffect(() => {
         localStorage.setItem(localStorageItemsKey, JSON.stringify(items));
@@ -175,7 +171,7 @@ export default function Home({ user }: Props) {
             <div className="max-w-xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
                 <h1 className="text-2xl font-bold mb-4 text-center">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-6">
-                    <p>Welcome, {upperCaseFirstLetter(user.name) || user.email}!</p>
+                    <p>Welcome, {upperCaseFirstLetter(user?.name) || user?.email}!</p>
                 </div>
 
                 {!goalSubmitted ? (
@@ -205,7 +201,8 @@ export default function Home({ user }: Props) {
                                 className="ml-2 text-orange-400 hover:text-orange-300"
                             >
                                 <FaPencilAlt className="inline mr-1" size={10} />
-                            </button>
+                            </button><br />
+                            Calories Logged Today: <strong>{totalCaloriesToday?.total || 0} cal</strong>
                         </p>
 
                         {updatingGoal && (
@@ -356,20 +353,21 @@ export default function Home({ user }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const cookieHeader = req.headers.cookie;
-    const token = cookieHeader?.match(/token=([^;]+)/)?.[1];
+    const token = cookieHeader?.match(/macroAIToken=([^;]+)/)?.[1];
 
     if (!token) {
         return { redirect: { destination: '/', permanent: false } };
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
-        const user = db
-            .prepare('SELECT name, email, calorie_goal, isPremium FROM users WHERE email = ?')
-            .get(decoded.email) as User;
-
+        const user = jwt.verify(token, JWT_SECRET) as User;
         if (!user) throw new Error('User not found');
-        return { props: { user } };
+
+        const totalCaloriesToday = db
+            .prepare('SELECT SUM(calories) as total FROM food_logs WHERE user_id = ? AND date = ?')
+            .get(user.id, new Date().toISOString().split('T')[0]);
+
+        return { props: { user, totalCaloriesToday } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };
     }

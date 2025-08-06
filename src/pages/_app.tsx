@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import { Geist, Geist_Mono } from 'next/font/google';
+import Head from 'next/head';
 import '../styles/globals.css';
 
 const geistSans = Geist({
@@ -14,8 +15,15 @@ const geistMono = Geist_Mono({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <main className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <Component {...pageProps} />
-    </main>
+    <>
+      <Head>
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1f1f1f" />
+      </Head>
+      <main className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Component {...pageProps} />
+      </main>
+    </>
   );
 }

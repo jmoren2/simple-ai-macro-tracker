@@ -12,6 +12,6 @@ services:
     ports:
       - "4000:3000"
     volumes:
-      - .:/home/node/app
-      - /home/node/app/node_modules
+      - .:/app
+      - /app/node_modules
     command: npm run dev

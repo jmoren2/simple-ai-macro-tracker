@@ -181,7 +181,7 @@ export default function Home({ user, dailyTotals }: Props) {
 
                 {!goalSubmitted ? (
                     <div className="flex flex-col items-center gap-4">
-                        <p>Whats your calorie goal for the day?</p>
+                        <p>What is your daily calorie goal?</p>
                         <input
                             type="number"
                             placeholder="e.g. 2200"
@@ -215,7 +215,7 @@ export default function Home({ user, dailyTotals }: Props) {
                                 <span>Calories eaten today: </span>
                                 <strong className={
                                     dailyTotals.calories && dailyTotals.calories < calorieGoal
-                                        ? 'text-green-400'
+                                        ? 'text-green-600'
                                         : 'text-red-400'
                                 }>
                                     {dailyTotals.calories ?? 0} cal
@@ -322,14 +322,16 @@ export default function Home({ user, dailyTotals }: Props) {
                             ))}
                         </ul>
 
-                        <button
-                            className="w-full py-2 rounded text-white disabled:opacity-50"
-                            style={{ backgroundColor: '#22c55e' }}
-                            onClick={analyzeItems}
-                            disabled={items.length === 0 || loading}
-                        >
-                            {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
-                        </button>
+                        <div className="flex justify-center">
+                            <button
+                                className="w-1/4 min-w-[180px] py-2 rounded text-white disabled:opacity-50"
+                                style={{ backgroundColor: 'var(--color-green-600)' }}
+                                onClick={analyzeItems}
+                                disabled={items.length === 0 || loading}
+                            >
+                                {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
+                            </button>
+                        </div>
 
                         {result && (
                             <div className="mt-6">
@@ -390,6 +392,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
     try {
         const user = jwt.verify(token, JWT_SECRET) as User;
+        console.log('user from token', user);
+
         if (!user) throw new Error('User not found');
 
         const dailyTotals = db

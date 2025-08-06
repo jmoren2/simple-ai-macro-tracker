@@ -19,6 +19,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) return res.status(401).json({ error: 'Invalid email or password' });
 
+    setJWT(req, res, user);
+
+    return res.status(200).json({ message: 'Logged in' });
+}
+
+export function setJWT(req: NextApiRequest, res: NextApiResponse, user: User) {
     const token = jwt.sign({
         id: user.id,
         email: user.email,
@@ -35,6 +41,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         maxAge: 60 * 60 * 24 * 7,
         path: '/',
     });
-
-    return res.status(200).json({ message: 'Logged in' });
 }

@@ -3,6 +3,7 @@ import { getUserFromRequest } from '@/lib/auth';
 import { User } from '@/types/db/User';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../db/db';
+import { setJWT } from './login';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
@@ -17,6 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const stmt = db.prepare(`UPDATE users SET calorie_goal = ? WHERE id = ?`);
         stmt.run(calorieGoal, user.id);
+
+        setJWT(req, res, { ...user, calorie_goal: calorieGoal });
 
         return res.status(200).json({ success: true });
     } catch (err) {

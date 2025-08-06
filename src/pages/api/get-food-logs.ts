@@ -29,7 +29,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         // }
 
         const logs = db
-            .prepare('SELECT name, calories, protein, fat, carbs FROM food_logs WHERE user_id = ? AND date = ?')
+            .prepare('SELECT name, calories, protein, fat, carbs FROM food_logs WHERE user_id = ? AND date = ? ORDER BY created_at DESC')
             .all(userId, date);
 
         return res.status(200).json({ logs });

@@ -89,7 +89,7 @@ export default function Home({ user }: Props) {
             localStorage.removeItem(localStorageItemsKey);
             localStorage.setItem(localStorageDateKey, today);
             hydrateFromDB();
-        } else if (!lastSavedItems) {
+        } else if (!lastSavedItems || lastSavedItems.length === 0) {
             hydrateFromDB();
         } else {
             setItems(JSON.parse(lastSavedItems));

@@ -120,7 +120,7 @@ export default function Home({ user }: Props) {
         if (!name) return;
         const parsed = parseInt(calories, 10);
         const value: number | 'unknown' = isNaN(parsed) ? 'unknown' : parsed;
-        setItems([...items, { name, calories: value }]);
+        setItems([{ name, calories: value }, ...items]);
         setName('');
         setCalories('');
     };

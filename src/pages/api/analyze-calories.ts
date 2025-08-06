@@ -1,4 +1,6 @@
 // app/api/analyze-calories/route.ts
+import { getUserFromRequest } from '@/lib/auth';
+import { User } from '@/types/db/User';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextResponse } from 'next/server';
@@ -7,6 +9,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const user = await getUserFromRequest(req, res) as User | null;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
     try {
         const { items } = await req.body;
 

@@ -1,18 +1,15 @@
-import jwt from 'jsonwebtoken';
+import { getUserFromRequest } from '@/lib/auth';
+import { User } from '@/types/db/User';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../db/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end('Method not allowed');
 
-  const token = req.cookies.token;
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await getUserFromRequest(req, res) as User | null;
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-    const userId = decoded.id;
     const { items, result } = req.body;
 
     const date = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
@@ -29,7 +26,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       console.log(`Breakdown for ${item.name}:`, breakdown);
 
       insert.run(
-        userId,
+        user.id,
         item.name,
         typeof breakdown?.calories === 'number' ? breakdown.calories : null,
         breakdown?.protein ?? null,

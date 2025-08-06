@@ -352,9 +352,7 @@ export default function Home({ user, totalCaloriesToday }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const cookieHeader = req.headers.cookie;
-    const token = cookieHeader?.match(/macroAIToken=([^;]+)/)?.[1];
-
+    const token = req.cookies?.macroAIToken;
     if (!token) {
         return { redirect: { destination: '/', permanent: false } };
     }

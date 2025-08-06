@@ -74,24 +74,18 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const cookieHeader = req.headers.cookie;
-  const token = cookieHeader?.match(/macroAIToken=([^;]+)/)?.[1];
-
+  const token = req.cookies?.macroAIToken;
   if (!token) {
     return { redirect: { destination: '/', permanent: false } };
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-    const userId = decoded.id;
-
-    //get user data
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as User | undefined;
+    const user = jwt.verify(token, JWT_SECRET) as User;
     if (!user) {
       return { redirect: { destination: '/', permanent: false } };
     }
-    const calorieGoal = user.calorie_goal;
 
+    const calorieGoal = user.calorie_goal;
     const rows = db
       .prepare(
         `SELECT date, name, calories, protein, fat, carbs
@@ -99,7 +93,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
          WHERE user_id = ?
          ORDER BY created_at DESC`
       )
-      .all(userId) as FoodLog[];
+      .all(user.id) as FoodLog[];
 
     const logsByDate: Record<string, FoodLog[]> = {};
     for (const row of rows) {

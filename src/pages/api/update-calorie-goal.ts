@@ -1,22 +1,22 @@
 // pages/api/update-calorie-goal.ts
-import jwt from 'jsonwebtoken';
+import { getUserFromRequest } from '@/lib/auth';
+import { User } from '@/types/db/User';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../db/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') return res.status(405).end();
+    const user = await getUserFromRequest(req, res) as User | null;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
     const { calorieGoal } = req.body;
-    const token = req.cookies.token;
-
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
-        const stmt = db.prepare(`UPDATE users SET calorie_goal = ? WHERE email = ?`);
-        stmt.run(calorieGoal, decoded.email);
+        const stmt = db.prepare(`UPDATE users SET calorie_goal = ? WHERE id = ?`);
+        stmt.run(calorieGoal, user.id);
 
         return res.status(200).json({ success: true });
     } catch (err) {

@@ -1,36 +1,26 @@
-import jwt from 'jsonwebtoken';
+import { getUserFromRequest } from '@/lib/auth';
+import { User } from '@/types/db/User';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../db/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const token = req.headers.cookie?.match(/macroAIToken=([^;]+)/)?.[1];
-    if (!token) {
-        return res.status(401).json({ error: 'Unauthorized: No token' });
-    }
+    const user = await getUserFromRequest(req, res) as User | null;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-        const userId = decoded.id;
         const { date } = req.query;
 
-        if (!decoded || typeof date !== 'string') {
+        if (!user || typeof date !== 'string') {
             return res.status(400).json({ error: 'Missing or invalid date parameter' });
         }
 
-        // const user = db.prepare('SELECT id FROM users WHERE email = ?').get(decoded.email);
-        // if (!user) {
-        //     return res.status(404).json({ error: 'User not found' });
-        // }
-
         const logs = db
             .prepare('SELECT name, calories, protein, fat, carbs FROM food_logs WHERE user_id = ? AND date = ? ORDER BY created_at DESC')
-            .all(userId, date);
+            .all(user.id, date);
 
         return res.status(200).json({ logs });
     } catch (err) {

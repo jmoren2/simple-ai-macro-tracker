@@ -7,7 +7,7 @@ import db from '../../db/db';
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
 
 type FoodLog = {
-  date: string;
+  created_at: string;
   name: string;
   calories: number | null;
   protein: number | null;
@@ -103,8 +103,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
     const logsByDate: Record<string, FoodLog[]> = {};
     for (const row of rows) {
-      if (!logsByDate[row.date]) logsByDate[row.date] = [];
-      logsByDate[row.date].push(row);
+      const date = new Date(row.created_at).toISOString().split('T')[0]; // Format to YYYY-MM-DD
+      if (!logsByDate[date]) logsByDate[date] = [];
+      logsByDate[date].push(row);
     }
 
     return { props: { logsByDate, calorieGoal } };

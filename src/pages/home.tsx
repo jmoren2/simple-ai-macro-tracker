@@ -298,7 +298,7 @@ export default function Home({ user, totalCaloriesToday }: Props) {
                             onClick={analyzeItems}
                             disabled={items.length === 0 || loading}
                         >
-                            {loading ? 'Analyzing...' : 'Analyze Food with AI'}
+                            {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
                         </button>
 
                         {result && (

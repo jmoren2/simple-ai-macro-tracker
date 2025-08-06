@@ -15,11 +15,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const userId = decoded.id;
     const { items, result } = req.body;
 
-    const date = new Date().toISOString();
+    const date = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
 
     const insert = db.prepare(`
-      INSERT INTO food_logs (user_id, name, calories, protein, fat, carbs)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO food_logs (user_id, name, calories, protein, fat, carbs, date)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const item of items) {
@@ -34,7 +34,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         typeof breakdown?.calories === 'number' ? breakdown.calories : null,
         breakdown?.protein ?? null,
         breakdown?.fat ?? null,
-        breakdown?.carbs ?? null
+        breakdown?.carbs ?? null,
+        date
       );
     }
 

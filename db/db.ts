@@ -20,6 +20,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS food_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     name TEXT NOT NULL,
     calories INTEGER,

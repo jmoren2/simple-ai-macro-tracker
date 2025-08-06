@@ -34,10 +34,15 @@ type Result = {
 
 type Props = {
     user: User;
-    totalCaloriesToday: number | null;
+    dailyTotals: {
+        calories: number | null;
+        protein: number | null;
+        carbs: number | null;
+        fat: number | null;
+    };
 };
 
-export default function Home({ user, totalCaloriesToday }: Props) {
+export default function Home({ user, dailyTotals }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
@@ -169,8 +174,8 @@ export default function Home({ user, totalCaloriesToday }: Props) {
         <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             <Navbar />
             <div className="max-w-xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
-                <h1 className="text-2xl font-bold mb-4 text-center">🧠 Simple AI Macro Tracker</h1>
-                <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold mb-2 text-center">🧠 Simple AI Macro Tracker</h1>
+                <div className="text-center mb-2">
                     <p>Welcome, {upperCaseFirstLetter(user?.name) || user?.email}!</p>
                 </div>
 
@@ -194,17 +199,42 @@ export default function Home({ user, totalCaloriesToday }: Props) {
                     </div>
                 ) : (
                     <>
-                        <p className="mb-4 text-center">
-                            🎯 Daily Goal: <strong>{calorieGoal} cal</strong>
-                            <button
-                                onClick={() => setUpdatingGoal(true)}
-                                className="ml-2 text-orange-400 hover:text-orange-300"
-                            >
-                                <FaPencilAlt className="inline mr-1" size={10} />
-                            </button><br />
-                            Calories eaten today: <strong className={`text-${totalCaloriesToday && totalCaloriesToday < calorieGoal ? 'green' : 'red'}-500`}>{totalCaloriesToday ?? 0} cal</strong><br />
-                            Calories remaining: <strong>{totalCaloriesToday ? calorieGoal - totalCaloriesToday : calorieGoal} cal</strong>
-                        </p>
+                        <div className="mb-6 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                                <span className="text-md">🎯 Daily Goal:</span>
+                                <strong className="text-md">{calorieGoal} cal</strong>
+                                <button
+                                    onClick={() => setUpdatingGoal(true)}
+                                    className="text-orange-400 hover:text-orange-300"
+                                >
+                                    <FaPencilAlt size={14} />
+                                </button>
+                            </div>
+
+                            <div className='text-sm'>
+                                <span>Calories eaten today: </span>
+                                <strong className={
+                                    dailyTotals.calories && dailyTotals.calories < calorieGoal
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
+                                }>
+                                    {dailyTotals.calories ?? 0} cal
+                                </strong>
+                            </div>
+
+                            <div className="text-xs">
+                                <span>Protein: <strong>{dailyTotals.protein ?? 0}g</strong></span>{' '}
+                                <span className="mx-2">|</span>
+                                <span>Carbs: <strong>{dailyTotals.carbs ?? 0}g</strong></span>{' '}
+                                <span className="mx-2">|</span>
+                                <span>Fat: <strong>{dailyTotals.fat ?? 0}g</strong></span>
+                            </div>
+
+                            <div className="text-sm">
+                                <span>Calories remaining: </span>
+                                <strong>{dailyTotals.calories ? calorieGoal - dailyTotals.calories : calorieGoal} cal</strong>
+                            </div>
+                        </div>
 
                         {updatingGoal && (
                             <div className="mb-4 flex gap-2 items-center justify-center">
@@ -362,11 +392,11 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         const user = jwt.verify(token, JWT_SECRET) as User;
         if (!user) throw new Error('User not found');
 
-        const totalCaloriesToday = db
-            .prepare('SELECT SUM(calories) as total FROM food_logs WHERE user_id = ? AND date = ?')
-            .get(user.id, new Date().toISOString().split('T')[0]) as { total: number | null };
+        const dailyTotals = db
+            .prepare('SELECT SUM(calories) as calories, SUM(protein) as protein, SUM(carbs) as carbs, SUM(fat) as fat FROM food_logs WHERE user_id = ? AND date = ?')
+            .get(user.id, new Date().toISOString().split('T')[0]) as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
 
-        return { props: { user, totalCaloriesToday: totalCaloriesToday.total } };
+        return { props: { user, dailyTotals } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };
     }

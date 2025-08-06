@@ -175,7 +175,7 @@ export default function Home({ user }: Props) {
             <div className="max-w-xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
                 <h1 className="text-2xl font-bold mb-4 text-center">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-6">
-                    <p>Welcome, {upperCaseFirstLetter(user.name) || user.email}!</p>
+                    <p>Welcome, {upperCaseFirstLetter(user.name) || user.email}!!!!!!</p>
                 </div>
 
                 {!goalSubmitted ? (

@@ -9,7 +9,7 @@ type Props = {
     user: User;
 };
 
-export default function Logs({ user }: Props) {
+export default function Pricing({ user }: Props) {
     return (
         <div className="min-h-screen bg-brand-bg text-brand-text p-4">
             <Navbar />

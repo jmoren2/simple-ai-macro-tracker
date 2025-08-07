@@ -9,6 +9,7 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
+import { MdOutlineCancel } from 'react-icons/md';
 import db from '../../db/db';
 import MacroPieChart from '../components/MacroPieChart';
 
@@ -43,7 +44,7 @@ type Props = {
     };
 };
 
-function getItemKey(item: FoodItem & { timestamp?: number }) {
+function getItemKey(item: FoodItem & { timestamp?: string }) {
     return `${item.name}|${item.calories}|${item.timestamp}`;
 }
 
@@ -51,12 +52,12 @@ export default function Home({ user, dailyTotals }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
-    const [items, setItems] = useState<FoodItem[]>([]);
+    const [items, setItems] = useState<(FoodItem & { timestamp?: string })[]>([]);
     const [name, setName] = useState('');
     const [calories, setCalories] = useState('');
     const [result, setResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
-    const [alreadySavedToday, setAlreadySavedToday] = useState<FoodItem[]>([]);
+    const [alreadySavedToday, setAlreadySavedToday] = useState<(FoodItem & { timestamp?: string })[]>([]);
     const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
     const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
     const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -327,17 +328,39 @@ export default function Home({ user, dailyTotals }: Props) {
                         </div>
 
                         <ul className="mb-4">
-                            {items.map((item, idx) => (
-                                <li key={idx} className="flex justify-between border-b border-gray-700 py-1 text-sm">
-                                    <span>{item.name}</span>
-                                    <span>
-                                        {typeof item.calories === 'number' && !isNaN(item.calories)
-                                            ? `${item.calories} cal`
-                                            : 'unknown'}
-                                    </span>
-                                </li>
-                            ))}
+                            {items.map((item, idx) => {
+                                const isAlreadySaved = alreadySavedToday.some(
+                                    (saved) => saved.name === item.name && saved.calories === item.calories && saved.timestamp === item.timestamp
+                                );
+
+                                return (
+                                    <li
+                                        key={idx}
+                                        className="flex justify-between items-center border-b border-gray-700 py-1 text-sm"
+                                    >
+                                        <span>{item.name}</span>
+                                        <span className="flex items-center gap-2">
+                                            {typeof item.calories === 'number' && !isNaN(item.calories)
+                                                ? `${item.calories} cal`
+                                                : 'unknown'}
+
+                                            {!isAlreadySaved && (
+                                                <button
+                                                    onClick={() => {
+                                                        setItems(items.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-red-400 hover:text-red-300 text-sm justify-center items-center"
+                                                    title="Remove item"
+                                                >
+                                                    <MdOutlineCancel size={12} />
+                                                </button>
+                                            )}
+                                        </span>
+                                    </li>
+                                );
+                            })}
                         </ul>
+
 
                         <div className="flex justify-center">
                             <button

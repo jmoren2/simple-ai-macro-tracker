@@ -3,7 +3,7 @@
 import Navbar from '@/components/Navbar';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
-import { getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
+import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
@@ -135,7 +135,7 @@ export default function Home({ user, dailyTotals }: Props) {
         const newItem = {
             name,
             calories: value,
-            timestamp: getPSTDateString(new Date()), // ensures uniqueness
+            timestamp: formatPSTDate(), // ensures uniqueness for same name on same day, using current PST time
         };
         setItems([newItem, ...items]);
 

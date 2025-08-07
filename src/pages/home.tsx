@@ -392,8 +392,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
     try {
         const user = jwt.verify(token, JWT_SECRET) as User;
-        console.log('user from token', user);
-
         if (!user) throw new Error('User not found');
 
         // Get today's date in PST (America/Los_Angeles)

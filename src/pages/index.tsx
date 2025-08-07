@@ -1,3 +1,4 @@
+import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
@@ -167,3 +168,16 @@ export default function Index() {
     </main>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const token = req.cookies?.macroAIToken;
+  if (token) {
+    return { redirect: { destination: '/home', permanent: false } };
+  }
+
+  try {
+    return { props: {} };
+  } catch {
+    return { redirect: { destination: '/', permanent: false } };
+  }
+};

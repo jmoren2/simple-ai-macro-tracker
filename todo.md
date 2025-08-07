@@ -1,0 +1,6 @@
+- macro goals
+- track water
+- implement assistant
+- fix logos
+- implement about page
+- pricing?

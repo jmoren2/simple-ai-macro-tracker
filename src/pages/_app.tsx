@@ -2,6 +2,7 @@ import type { AppProps } from 'next/app';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Head from 'next/head';
 import '../styles/globals.css';
+import '../styles/calendar.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

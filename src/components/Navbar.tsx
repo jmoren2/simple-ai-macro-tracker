@@ -37,6 +37,7 @@ export default function Navbar() {
         <div className="hidden sm:flex space-x-4 items-center">
           <Link href="/home" className="hover:text-orange-400">Home</Link>
           <Link href="/logs" className="hover:text-orange-400">Daily Logs</Link>
+          <Link href="/calendar" className="hover:text-orange-400">Calendar</Link>
           <Link href="/assistant" className="hover:text-orange-400">Macro Assistant</Link>
 
           {/* Dropdown trigger */}
@@ -64,6 +65,7 @@ export default function Navbar() {
         <div className="sm:hidden px-4 pb-3 flex flex-col space-y-2">
           <Link href="/home" className="hover:text-orange-400" onClick={() => setIsOpen(false)}>Home</Link>
           <Link href="/logs" className="hover:text-orange-400" onClick={() => setIsOpen(false)}>Daily Logs</Link>
+          <Link href="/calendar" className="hover:text-orange-400" onClick={() => setIsOpen(false)}>Calendar</Link>
           <Link href="/assistant" className="hover:text-orange-400" onClick={() => setIsOpen(false)}>Macro Assistant</Link>
           <Link href="/settings" className="hover:text-orange-400" onClick={() => setIsOpen(false)}>Settings</Link>
           <Link href="/pricing" className="hover:text-orange-400" onClick={() => setIsOpen(false)}>Pricing</Link>

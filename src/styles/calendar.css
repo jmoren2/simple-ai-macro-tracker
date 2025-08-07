@@ -1,0 +1,37 @@
+/* styles/calendar.css */
+.react-calendar {
+  background-color: #1f1f1f;
+  border: none;
+  color: rgb(0, 0, 0);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.react-calendar__tile {
+  border-radius: 6px;
+  height: 3rem;
+}
+
+.calorie-under {
+  background-color: #16a34a !important; /* green */
+  color: white !important;
+}
+.calorie-over {
+  background-color: #dc2626 !important; /* red */
+  color: white !important;
+}
+.calorie-exact {
+  background-color: #facc15 !important; /* yellow */
+  color: black !important;
+}
+
+.dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.dot.under { background-color: #16a34a; }
+.dot.over { background-color: #dc2626; }
+.dot.exact { background-color: #facc15; }

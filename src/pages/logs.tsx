@@ -47,7 +47,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
                   <h2 className="text-md font-semibold text-brand-accent">{date}</h2>
                   <div className={`text-sm text-brand-muted text-right ${totals.calories > calorieGoal ? 'text-red-500' : 'text-green-600'}`}>
                     {totals.calories} cal<br />
-                    {totals.protein}p · {totals.carbs.toFixed(1)}c · {totals.fat.toFixed(1)}f
+                    {totals.protein.toFixed(1)}p · {totals.carbs.toFixed(1)}c · {totals.fat.toFixed(1)}f
                   </div>
                 </div>
                 <ul className="space-y-2">

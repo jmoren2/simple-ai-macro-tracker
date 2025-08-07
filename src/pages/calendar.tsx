@@ -24,6 +24,8 @@ type Props = {
 };
 
 export default function Calendar({ history }: Props) {
+    console.log(history);
+
     const dateMap = useMemo(() => {
         const map: Record<string, 'under' | 'over' | 'exact'> = {};
         for (const { date, total, goal } of history) {
@@ -47,6 +49,23 @@ export default function Calendar({ history }: Props) {
                             if (key in dateMap) return `calorie-${dateMap[key]}`;
                             return '';
                         }}
+                        tileContent={({ date, view }) => {
+                            if (view !== 'month') return null;
+
+                            const key = date.toISOString().split('T')[0];
+                            const entry = history.find((e) => e.date === key);
+
+                            if (entry) {
+                                return (
+                                    <div className="text-xs text-center">
+                                        {entry.total} cal
+                                    </div>
+                                );
+                            }
+
+                            return null;
+                        }}
+
                     />
                 </div>
 

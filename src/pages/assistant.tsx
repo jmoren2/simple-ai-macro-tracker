@@ -41,7 +41,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         if (!user) {
             return { redirect: { destination: '/', permanent: false } };
         }
-        user.isPremium = false;
+
         return { props: { user } };
     } catch (err) {
         console.log(err);

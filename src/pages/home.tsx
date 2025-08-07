@@ -1,6 +1,7 @@
 'use client';
 
 import Navbar from '@/components/Navbar';
+import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import jwt from 'jsonwebtoken';
@@ -42,6 +43,10 @@ type Props = {
     };
 };
 
+function getItemKey(item: FoodItem & { timestamp?: number }) {
+    return `${item.name}|${item.calories}|${item.timestamp}`;
+}
+
 export default function Home({ user, dailyTotals }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
@@ -75,13 +80,17 @@ export default function Home({ user, dailyTotals }: Props) {
 
         const hydrateFromDB = async () => {
             const res = await fetch(`/api/get-food-logs?date=${today}`);
-            const data = await res.json();
+            const data = await res.json() as { logs: FoodLog[] };
 
             if (data?.logs?.length > 0) {
+                const logsWithTimestamps = data.logs.map((item) => ({
+                    ...item,
+                    timestamp: item.created_at ?? Date.now(), // fallback if DB didn’t return one
+                })) as FoodLog[];
                 localStorage.setItem(localStorageDateKey, today);
-                localStorage.setItem(localStorageItemsKey, JSON.stringify(data.logs));
-                setItems(data.logs); // React state for visible input
-                setAlreadySavedToday(data.logs); // Track what’s been saved to DB
+                localStorage.setItem(localStorageItemsKey, JSON.stringify(logsWithTimestamps));
+                setItems(logsWithTimestamps); // React state for visible input
+                setAlreadySavedToday(logsWithTimestamps); // Track what’s been saved to DB
             }
         };
 
@@ -119,9 +128,17 @@ export default function Home({ user, dailyTotals }: Props) {
 
     const addItem = () => {
         if (!name) return;
+
         const parsed = parseInt(calories, 10);
         const value: number | 'unknown' = isNaN(parsed) ? 'unknown' : parsed;
-        setItems([{ name, calories: value }, ...items]);
+
+        const newItem = {
+            name,
+            calories: value,
+            timestamp: getPSTDateString(new Date()), // ensures uniqueness
+        };
+        setItems([newItem, ...items]);
+
         setName('');
         setCalories('');
     };
@@ -136,7 +153,7 @@ export default function Home({ user, dailyTotals }: Props) {
         // 2. Filter out items that are already saved
         const newItems = items.filter(
             (item) => !savedItems.some(
-                (saved) => saved.name === item.name && saved.calories === item.calories
+                (saved) => getItemKey(saved) === getItemKey(item)
             )
         );
 

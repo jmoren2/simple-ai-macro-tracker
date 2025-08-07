@@ -1,4 +1,5 @@
 import { getUserFromRequest } from '@/lib/auth';
+import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../db/db';
@@ -19,8 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const logs = db
-            .prepare('SELECT name, calories, protein, fat, carbs FROM food_logs WHERE user_id = ? AND date = ? ORDER BY created_at DESC')
-            .all(user.id, date);
+            .prepare('SELECT name, calories, protein, fat, carbs, created_at FROM food_logs WHERE user_id = ? AND date = ? ORDER BY created_at DESC')
+            .all(user.id, date) as FoodLog[];
 
         return res.status(200).json({ logs });
     } catch (err) {

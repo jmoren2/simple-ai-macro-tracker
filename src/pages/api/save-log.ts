@@ -1,5 +1,6 @@
 import { getUserFromRequest } from '@/lib/auth';
 import { User } from '@/types/db/User';
+import { getPSTDateString } from '@/utils/utils';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../db/db';
 
@@ -12,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { items, result } = req.body;
 
-    const date = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    const date = getPSTDateString(new Date());
 
     const insert = db.prepare(`
       INSERT INTO food_logs (user_id, name, calories, protein, fat, carbs, date)

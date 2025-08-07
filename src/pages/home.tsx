@@ -2,7 +2,7 @@
 
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
-import { upperCaseFirstLetter } from '@/utils/utils';
+import { getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
@@ -69,7 +69,7 @@ export default function Home({ user, dailyTotals }: Props) {
     }, []);
 
     useEffect(() => {
-        const today = new Date().toISOString().split('T')[0]; // Format to YYYY-MM-DD
+        const today = getPSTDateString(new Date());
         const lastSavedDate = localStorage.getItem(localStorageDateKey);
         const lastSavedItems = localStorage.getItem(localStorageItemsKey);
 
@@ -173,7 +173,7 @@ export default function Home({ user, dailyTotals }: Props) {
     return (
         <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             <Navbar />
-            <div className="max-w-2xl mx-auto p-6 rounded-xl shadow-xl mt-8" style={{ backgroundColor: '#2c2c2c' }}>
+            <div className="max-w-2xl mx-auto p-6 rounded-xl shadow-xl mt-6" style={{ backgroundColor: '#2c2c2c' }}>
                 <h1 className="text-2xl font-bold mb-2 text-center">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-2">
                     <p>Welcome, {upperCaseFirstLetter(user?.name) || user?.email}!</p>
@@ -396,9 +396,10 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
         if (!user) throw new Error('User not found');
 
+        // Get today's date in PST (America/Los_Angeles)
         const dailyTotals = db
             .prepare('SELECT SUM(calories) as calories, SUM(protein) as protein, SUM(carbs) as carbs, SUM(fat) as fat FROM food_logs WHERE user_id = ? AND date = ?')
-            .get(user.id, new Date().toISOString().split('T')[0]) as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
+            .get(user.id, getPSTDateString(new Date())) as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
 
         return { props: { user, dailyTotals } };
     } catch {

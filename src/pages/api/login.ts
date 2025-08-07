@@ -42,3 +42,25 @@ export function setJWT(req: NextApiRequest, res: NextApiResponse, user: User) {
         path: '/',
     });
 }
+
+export function refresshJWT(req: NextApiRequest, res: NextApiResponse, userId: number) {
+    if (!userId) return;
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as User | undefined;
+    if (!user) return;
+    const token = jwt.sign({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isPremium: user.isPremium,
+        calorie_goal: user.calorie_goal
+    }, JWT_SECRET, { expiresIn: '7d' });
+
+    setCookie('macroAIToken', token, {
+        req,
+        res,
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+    });
+}

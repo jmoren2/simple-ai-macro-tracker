@@ -43,7 +43,7 @@ export function setJWT(req: NextApiRequest, res: NextApiResponse, user: User) {
     });
 }
 
-export function refresshJWT(req: NextApiRequest, res: NextApiResponse, userId: number) {
+export function refreshJWT(req: NextApiRequest, res: NextApiResponse, userId: number) {
     if (!userId) return;
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as User | undefined;
     if (!user) return;

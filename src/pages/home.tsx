@@ -1,9 +1,11 @@
 'use client';
 
+import ActivityTracker from '@/components/ActivityTracker';
 import DailyGoal from '@/components/DailyGoal';
 import FoodTracker from '@/components/FoodTracker';
 import Navbar from '@/components/Navbar';
 import ThemedTabs from '@/components/ThemedTabs';
+import WaterTracker from '@/components/WaterTracker';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
@@ -234,11 +236,11 @@ export default function Home({ user, dailyTotals }: Props) {
                             },
                             {
                                 title: "Water",
-                                content: <div className="text-center text-gray-500">Water tracking coming soon!</div>
+                                content: <WaterTracker />
                             },
                             {
                                 title: "Steps and Activity",
-                                content: <div className="text-center text-gray-500">Steps and activity tracking coming soon!</div>
+                                content: <ActivityTracker />
                             }
                         ]}
                     />

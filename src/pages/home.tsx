@@ -3,6 +3,7 @@
 import DailyGoal from '@/components/DailyGoal';
 import FoodTracker from '@/components/FoodTracker';
 import Navbar from '@/components/Navbar';
+import ThemedTabs from '@/components/ThemedTabs';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
@@ -205,26 +206,46 @@ export default function Home({ user, dailyTotals }: Props) {
                     updatingGoal={updatingGoal}
                 />
 
-                <FoodTracker
-                    name={name}
-                    setName={setName}
-                    calories={calories}
-                    setCalories={setCalories}
-                    addItem={addItem}
-                    items={items}
-                    setItems={setItems}
-                    alreadySavedToday={alreadySavedToday}
-                    analyzeItems={analyzeItems}
-                    loading={loading}
-                    result={result}
-                    caloriesRemaining={caloriesRemaining}
-                    suggestions={suggestions}
-                    setFilteredSuggestions={setFilteredSuggestions}
-                    filteredSuggestions={filteredSuggestions}
-                    user={user}
-                    foodInputFocused={foodInputFocused}
-                    setFoodInputFocused={setFoodInputFocused}
-                />
+                {goalSubmitted && (
+                    <ThemedTabs
+                        tabs={[
+                            {
+                                title: "Food Tracker",
+                                content: <FoodTracker
+                                    name={name}
+                                    setName={setName}
+                                    calories={calories}
+                                    setCalories={setCalories}
+                                    addItem={addItem}
+                                    items={items}
+                                    setItems={setItems}
+                                    alreadySavedToday={alreadySavedToday}
+                                    analyzeItems={analyzeItems}
+                                    loading={loading}
+                                    result={result}
+                                    caloriesRemaining={caloriesRemaining}
+                                    suggestions={suggestions}
+                                    setFilteredSuggestions={setFilteredSuggestions}
+                                    filteredSuggestions={filteredSuggestions}
+                                    user={user}
+                                    foodInputFocused={foodInputFocused}
+                                    setFoodInputFocused={setFoodInputFocused}
+                                />
+                            },
+                            {
+                                title: "Water",
+                                content: <div className="text-center text-gray-500">Water tracking coming soon!</div>
+                            },
+                            {
+                                title: "Steps and Activity",
+                                content: <div className="text-center text-gray-500">Steps and activity tracking coming soon!</div>
+                            }
+                        ]}
+                    />
+
+
+                )}
+
             </div>
         </div>
     );

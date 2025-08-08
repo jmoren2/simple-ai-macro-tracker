@@ -52,7 +52,7 @@ export default function FoodTracker({
                     <input
                         type="text"
                         placeholder="Food name"
-                        className="w-full border px-4 py-2 rounded bg-black text-white"
+                        className="w-full border px-4 py-2 rounded bg-black text-white rounded-xl"
                         value={name}
                         onChange={(e) => {
                             const val = e.target.value;
@@ -90,14 +90,14 @@ export default function FoodTracker({
                 <input
                     type="text"
                     placeholder="Calories"
-                    className="w-32 border px-4 py-2 rounded bg-black text-white"
+                    className="w-32 border px-4 py-2 rounded bg-black text-white rounded-xl"
                     value={calories}
                     onChange={(e) => setCalories(e.target.value)}
                 />
 
                 {/* Add button */}
                 <button
-                    className="px-4 py-2 rounded text-white"
+                    className="px-4 py-2 rounded text-white rounded-xl"
                     style={{ backgroundColor: "#f97316" }}
                     onClick={addItem}
                 >

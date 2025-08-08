@@ -367,7 +367,7 @@ export default function Home({ user, dailyTotals }: Props) {
                                 className="w-1/4 min-w-[180px] py-2 rounded text-white disabled:opacity-50"
                                 style={{ backgroundColor: 'var(--color-green-600)' }}
                                 onClick={analyzeItems}
-                                disabled={items.length === 0 || loading}
+                                disabled={items.length === 0 || loading || result !== null}
                             >
                                 {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
                             </button>

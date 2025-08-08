@@ -171,7 +171,7 @@ export default function Home({ user, dailyTotals }: Props) {
 
         // 4. Only send new items to DB
         if (newItems.length > 0) {
-            await fetch('/api/save-log', {
+            await fetch('/api/create-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items: newItems, result: data }),

@@ -2,11 +2,13 @@ import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
+import { MdOutlineCancel } from 'react-icons/md';
 import db from '../../db/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
 
 type FoodLog = {
+  id: number;
   date: string;
   name: string;
   calories: number | null;
@@ -16,11 +18,34 @@ type FoodLog = {
 };
 
 type Props = {
+  user: User;
   logsByDate: Record<string, FoodLog[]>;
   calorieGoal: number;
 };
 
-export default function Logs({ logsByDate, calorieGoal }: Props) {
+export default function Logs({ user, logsByDate, calorieGoal }: Props) {
+  const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
+  const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
+  const handleDeleteLog = async (id: number) => {
+    try {
+      const response = await fetch(`/api/delete-log/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete log');
+      }
+
+      localStorage.removeItem(localStorageItemsKey)
+      localStorage.removeItem(localStorageDateKey)
+
+      // Optionally, you can refresh the page or update the state to reflect the deletion
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting log:', error);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-brand-bg text-brand-text p-4">
       <Navbar />
@@ -33,6 +58,7 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
           Object.entries(logsByDate).map(([date, entries]) => {
             const totals = entries.reduce(
               (acc, item) => ({
+                id: item.id,
                 calories: acc.calories + (item.calories ?? 0),
                 protein: acc.protein + (item.protein ?? 0),
                 carbs: acc.carbs + (item.carbs ?? 0),
@@ -57,8 +83,9 @@ export default function Logs({ logsByDate, calorieGoal }: Props) {
                       className="flex justify-between items-center border-b border-gray-700 text-xs"
                     >
                       <span>{log.name}</span>
-                      <span className="text-xs text-brand-muted text-right whitespace-nowrap">
-                        {log.calories ?? '?'} cal · {log.protein ?? '?'}p · {log.carbs ?? '?'}c · {log.fat ?? '?'}f
+                      <span className="text-xs text-brand-muted text-right whitespace-nowrap flex items-center gap-1">
+                        {log.calories ?? '?'} cal · {log.protein ?? '?'}p · {log.carbs ?? '?'}c · {log.fat ?? '?'}f{' '}
+                        <MdOutlineCancel className="cursor-pointer text-gray-500 hover:text-red-700" size={8} onClick={() => handleDeleteLog(log.id)} />
                       </span>
                     </li>
                   ))}
@@ -88,7 +115,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const calorieGoal = user.calorie_goal;
     const rows = db
       .prepare(
-        `SELECT date, name, calories, protein, fat, carbs
+        `SELECT id, date, name, calories, protein, fat, carbs
          FROM food_logs
          WHERE user_id = ?
          ORDER BY created_at DESC`
@@ -101,7 +128,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
       logsByDate[row.date].push(row);
     }
 
-    return { props: { logsByDate, calorieGoal } };
+    return { props: { user, logsByDate, calorieGoal } };
   } catch (err) {
     console.log(err);
 

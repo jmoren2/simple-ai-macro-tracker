@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({ success: true });
   } catch (err) {
-    console.error('save-log error:', err);
-    return res.status(500).json({ error: 'Failed to save log' });
+    console.error('create-log error:', err);
+    return res.status(500).json({ error: 'Failed to create log' });
   }
 }

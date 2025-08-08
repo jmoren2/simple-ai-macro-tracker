@@ -1,5 +1,6 @@
 'use client';
 
+import DailyGoal from '@/components/DailyGoal';
 import Navbar from '@/components/Navbar';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
@@ -8,7 +9,6 @@ import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { FaPencilAlt } from 'react-icons/fa';
 import { MdOutlineCancel } from 'react-icons/md';
 import db from '../../db/db';
 import MacroPieChart from '../components/MacroPieChart';
@@ -197,227 +197,161 @@ export default function Home({ user, dailyTotals }: Props) {
                     <p>Welcome, {upperCaseFirstLetter(user?.name) || user?.email}!</p>
                 </div>
 
-                {!goalSubmitted ? (
-                    <div className="flex flex-col items-center gap-4">
-                        <p>What is your daily calorie goal?</p>
+                <DailyGoal
+                    goalSubmitted={goalSubmitted}
+                    calorieGoal={calorieGoal}
+                    setCalorieGoal={setCalorieGoal}
+                    saveGoal={saveGoal}
+                    setUpdatingGoal={setUpdatingGoal}
+                    dailyTotals={dailyTotals}
+                    updatingGoal={updatingGoal}
+                />
+
+                <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                    <div className="relative flex-1">
                         <input
-                            type="number"
-                            placeholder="e.g. 2200"
-                            className="w-48 border px-4 py-2 rounded text-center bg-black text-white"
-                            value={calorieGoal}
-                            onChange={(e) => setCalorieGoal(parseInt(e.target.value))}
-                        />
-                        <button
-                            className="px-6 py-2 rounded text-white"
-                            style={{ backgroundColor: '#f97316' }}
-                            onClick={saveGoal}
-                        >
-                            Continue
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="mb-6 text-center">
-                            <div className="flex items-center justify-center space-x-2">
-                                <span className="text-md">🎯 Daily Goal:</span>
-                                <strong className="text-md">{calorieGoal} cal</strong>
-                                <button
-                                    onClick={() => setUpdatingGoal(true)}
-                                    className="text-orange-400 hover:text-orange-300"
-                                >
-                                    <FaPencilAlt size={14} />
-                                </button>
-                            </div>
-
-                            <div className='text-sm'>
-                                <span>Calories eaten today: </span>
-                                <strong className={
-                                    dailyTotals.calories && dailyTotals.calories < calorieGoal
-                                        ? 'text-green-600'
-                                        : 'text-red-400'
-                                }>
-                                    {dailyTotals.calories ?? 0} cal
-                                </strong>
-                            </div>
-
-                            <div className="text-xs">
-                                <span>Protein: <strong>{dailyTotals.protein ?? 0}g</strong></span>{' '}
-                                <span className="mx-2">|</span>
-                                <span>Carbs: <strong>{dailyTotals.carbs ?? 0}g</strong></span>{' '}
-                                <span className="mx-2">|</span>
-                                <span>Fat: <strong>{dailyTotals.fat ?? 0}g</strong></span>
-                            </div>
-
-                            <div className="text-sm">
-                                <span>Calories remaining: </span>
-                                <strong>{dailyTotals.calories ? calorieGoal - dailyTotals.calories : calorieGoal} cal</strong>
-                            </div>
-                        </div>
-
-                        {updatingGoal && (
-                            <div className="mb-4 flex gap-2 items-center justify-center">
-                                <input
-                                    type="number"
-                                    className="border px-4 py-2 rounded text-center w-32 bg-black text-white"
-                                    value={calorieGoal}
-                                    onChange={(e) => setCalorieGoal(parseInt(e.target.value))}
-                                />
-                                <button
-                                    onClick={saveGoal}
-                                    className="px-4 py-2 rounded text-white"
-                                    style={{ backgroundColor: '#f97316' }}
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        )}
-                        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                            <div className="relative flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Food name"
-                                    className="w-full border px-4 py-2 rounded bg-black text-white"
-                                    value={name}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setName(val);
-                                        setFilteredSuggestions(
-                                            suggestions
-                                                .filter((s) => s.toLowerCase().includes(val.toLowerCase()))
-                                                .slice(0, 5)
-                                        );
-                                    }}
-                                    onFocus={() => setFoodInputFocused(true)}
-                                    onBlur={() => setTimeout(() => setFoodInputFocused(false), 100)}
-                                />
-                                {Boolean(user?.isPremium) && foodInputFocused && filteredSuggestions.length > 0 && (
-                                    <ul className="absolute z-10 left-0 right-0 mt-1 border border-gray-700 bg-[#1a1a1a] text-gray-300 rounded-lg shadow-lg overflow-hidden max-h-60 divide-y divide-gray-700">
-                                        {filteredSuggestions.map((sugg, idx) => (
-                                            <li
-                                                key={idx}
-                                                className="px-4 py-2 hover:bg-[#2a2a2a] hover:text-white cursor-pointer transition-colors text-sm"
-                                                onClick={() => {
-                                                    setName(sugg);
-                                                    setFilteredSuggestions([]);
-                                                }}
-                                            >
-                                                {sugg}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-
-                            {/* Calories input */}
-                            <input
-                                type="text"
-                                placeholder="Calories"
-                                className="w-32 border px-4 py-2 rounded bg-black text-white"
-                                value={calories}
-                                onChange={(e) => setCalories(e.target.value)}
-                            />
-
-                            {/* Add button */}
-                            <button
-                                className="px-4 py-2 rounded text-white"
-                                style={{ backgroundColor: '#f97316' }}
-                                onClick={addItem}
-                            >
-                                Add
-                            </button>
-                        </div>
-
-                        <ul className="mb-4">
-                            {items.map((item, idx) => {
-                                const isAlreadySaved = alreadySavedToday.some(
-                                    (saved) => saved.name === item.name && saved.calories === item.calories && saved.timestamp === item.timestamp
+                            type="text"
+                            placeholder="Food name"
+                            className="w-full border px-4 py-2 rounded bg-black text-white"
+                            value={name}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setName(val);
+                                setFilteredSuggestions(
+                                    suggestions
+                                        .filter((s) => s.toLowerCase().includes(val.toLowerCase()))
+                                        .slice(0, 5)
                                 );
-
-                                return (
+                            }}
+                            onFocus={() => setFoodInputFocused(true)}
+                            onBlur={() => setTimeout(() => setFoodInputFocused(false), 100)}
+                        />
+                        {Boolean(user?.isPremium) && foodInputFocused && filteredSuggestions.length > 0 && (
+                            <ul className="absolute z-10 left-0 right-0 mt-1 border border-gray-700 bg-[#1a1a1a] text-gray-300 rounded-lg shadow-lg overflow-hidden max-h-60 divide-y divide-gray-700">
+                                {filteredSuggestions.map((sugg, idx) => (
                                     <li
                                         key={idx}
-                                        className="flex justify-between items-center border-b border-gray-700 py-1 text-sm"
+                                        className="px-4 py-2 hover:bg-[#2a2a2a] hover:text-white cursor-pointer transition-colors text-sm"
+                                        onClick={() => {
+                                            setName(sugg);
+                                            setFilteredSuggestions([]);
+                                        }}
                                     >
-                                        <span>{item.name}</span>
-                                        <span className="flex items-center gap-2">
-                                            {typeof item.calories === 'number' && !isNaN(item.calories)
-                                                ? `${item.calories} cal`
-                                                : 'unknown'}
-
-                                            {!isAlreadySaved && (
-                                                <button
-                                                    onClick={() => {
-                                                        setItems(items.filter((_, i) => i !== idx));
-                                                    }}
-                                                    className="text-red-400 hover:text-red-300 text-sm justify-center items-center"
-                                                    title="Remove item"
-                                                >
-                                                    <MdOutlineCancel size={12} />
-                                                </button>
-                                            )}
-                                        </span>
+                                        {sugg}
                                     </li>
-                                );
-                            })}
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+
+                    {/* Calories input */}
+                    <input
+                        type="text"
+                        placeholder="Calories"
+                        className="w-32 border px-4 py-2 rounded bg-black text-white"
+                        value={calories}
+                        onChange={(e) => setCalories(e.target.value)}
+                    />
+
+                    {/* Add button */}
+                    <button
+                        className="px-4 py-2 rounded text-white"
+                        style={{ backgroundColor: '#f97316' }}
+                        onClick={addItem}
+                    >
+                        Add
+                    </button>
+                </div>
+
+                <ul className="mb-4">
+                    {items.map((item, idx) => {
+                        const isAlreadySaved = alreadySavedToday.some(
+                            (saved) => saved.name === item.name && saved.calories === item.calories && saved.timestamp === item.timestamp
+                        );
+
+                        return (
+                            <li
+                                key={idx}
+                                className="flex justify-between items-center border-b border-gray-700 py-1 text-sm"
+                            >
+                                <span>{item.name}</span>
+                                <span className="flex items-center gap-2">
+                                    {typeof item.calories === 'number' && !isNaN(item.calories)
+                                        ? `${item.calories} cal`
+                                        : 'unknown'}
+
+                                    {!isAlreadySaved && (
+                                        <button
+                                            onClick={() => {
+                                                setItems(items.filter((_, i) => i !== idx));
+                                            }}
+                                            className="text-red-400 hover:text-red-300 text-sm justify-center items-center"
+                                            title="Remove item"
+                                        >
+                                            <MdOutlineCancel size={12} />
+                                        </button>
+                                    )}
+                                </span>
+                            </li>
+                        );
+                    })}
+                </ul>
+
+
+                <div className="flex justify-center">
+                    <button
+                        className="w-1/4 min-w-[180px] py-2 rounded text-white disabled:opacity-50"
+                        style={{ backgroundColor: 'var(--color-green-600)' }}
+                        onClick={analyzeItems}
+                        disabled={items.length === 0 || loading || result !== null}
+                    >
+                        {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
+                    </button>
+                </div>
+
+                {result && (
+                    <div className="mt-6">
+                        <h2 className="text-lg font-semibold mb-2">Result
+                            <Link href="/logs" className="ml-2 text-sm text-blue-400 hover:text-blue-300">
+                                View Full Breakdown
+                            </Link>
+
+                        </h2>
+                        {/* <h3 className="text-lg font-semibold text-green-600 mb-2">Daily Totals</h3> */}
+                        <ul className="space-y-1">
+                            <li>🔥 Calories: <span className="font-bold">{result.total.calories}</span></li>
+                            <li>🍗 Protein: <span className="font-bold">{result.total.protein}g</span></li>
+                            <li>🍞 Carbs: <span className="font-bold">{result.total.carbs}g</span></li>
+                            <li>🥑 Fat: <span className="font-bold">{result.total.fat}g</span></li>
                         </ul>
 
-
-                        <div className="flex justify-center">
-                            <button
-                                className="w-1/4 min-w-[180px] py-2 rounded text-white disabled:opacity-50"
-                                style={{ backgroundColor: 'var(--color-green-600)' }}
-                                onClick={analyzeItems}
-                                disabled={items.length === 0 || loading || result !== null}
-                            >
-                                {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
-                            </button>
+                        <div className="mt-4 text-center text-base">
+                            {(() => {
+                                const remaining = caloriesRemaining();
+                                if (remaining === null) return null;
+                                return (
+                                    <>
+                                        {remaining > 0 ? (
+                                            <div>
+                                                <p>✅ You have <strong>{remaining} cal</strong> remaining.</p>
+                                                <MacroPieChart
+                                                    data={{
+                                                        protein: result.total.protein,
+                                                        carbs: result.total.carbs,
+                                                        fat: result.total.fat,
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : remaining < 0 ? (
+                                            <p>⚠️ Youve gone <strong>{Math.abs(remaining)} cal</strong> over your goal.</p>
+                                        ) : (
+                                            <p>🎉 Youve hit your calorie goal exactly!</p>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
-
-                        {result && (
-                            <div className="mt-6">
-                                <h2 className="text-lg font-semibold mb-2">Result
-                                    <Link href="/logs" className="ml-2 text-sm text-blue-400 hover:text-blue-300">
-                                        View Full Breakdown
-                                    </Link>
-
-                                </h2>
-                                {/* <h3 className="text-lg font-semibold text-green-600 mb-2">Daily Totals</h3> */}
-                                <ul className="space-y-1">
-                                    <li>🔥 Calories: <span className="font-bold">{result.total.calories}</span></li>
-                                    <li>🍗 Protein: <span className="font-bold">{result.total.protein}g</span></li>
-                                    <li>🍞 Carbs: <span className="font-bold">{result.total.carbs}g</span></li>
-                                    <li>🥑 Fat: <span className="font-bold">{result.total.fat}g</span></li>
-                                </ul>
-
-                                <div className="mt-4 text-center text-base">
-                                    {(() => {
-                                        const remaining = caloriesRemaining();
-                                        if (remaining === null) return null;
-                                        return (
-                                            <>
-                                                {remaining > 0 ? (
-                                                    <div>
-                                                        <p>✅ You have <strong>{remaining} cal</strong> remaining.</p>
-                                                        <MacroPieChart
-                                                            data={{
-                                                                protein: result.total.protein,
-                                                                carbs: result.total.carbs,
-                                                                fat: result.total.fat,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ) : remaining < 0 ? (
-                                                    <p>⚠️ Youve gone <strong>{Math.abs(remaining)} cal</strong> over your goal.</p>
-                                                ) : (
-                                                    <p>🎉 Youve hit your calorie goal exactly!</p>
-                                                )}
-                                            </>
-                                        );
-                                    })()}
-                                </div>
-                            </div>
-                        )}
-                    </>
+                    </div>
                 )}
             </div>
         </div>

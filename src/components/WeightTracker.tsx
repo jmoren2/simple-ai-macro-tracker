@@ -1,3 +1,4 @@
+import { WeightLog } from "@/types/db/WeightLog";
 import { LineChart as LineChartIcon, Pencil, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -10,32 +11,8 @@ import {
     YAxis,
 } from "recharts";
 
-/**
- * WeightTracker
- * ------------------------------------------------------------
- * A self-contained React component for tracking body weight.
- *
- * Features
- * - On first click: prompts the user for today's weight (if none exists)
- * - Shows today's weight above the chart
- * - Time-range selector: 7D / 30D / 1Y / ALL
- * - Add or edit today's weight
- * - Calls the provided addDailyWeight / updateDailyWeight functions
- *
- * Assumptions
- * - Dates are handled in local time by default.
- * - Parent can optionally re-provide updated `data` after mutations; we also optimistically update local state.
- */
-
-export type WeightEntry = {
-    /** ISO date (YYYY-MM-DD) or Date; time ignored */
-    date: string | Date;
-    /** weight value (e.g., in lbs or kg) */
-    weight: number;
-};
-
 export type WeightTrackerProps = {
-    data: WeightEntry[];
+    data: WeightLog[];
     addDailyWeight: (weight: number, date?: string) => Promise<void> | void;
     updateDailyWeight: (date: string, weight: number) => Promise<void> | void;
     initialRange?: "7d" | "30d" | "365d" | "all";
@@ -60,9 +37,10 @@ function toDateKey(d: string | Date) {
     const day = String(dt.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
 }
+
 function parseLocalDate(ymd: string) {
-  const [y, m, d] = ymd.split('-').map(Number);
-  return new Date(y, m - 1, d); // local midnight
+    const [y, m, d] = ymd.split('-').map(Number);
+    return new Date(y, m - 1, d); // local midnight
 }
 
 function shortDateLabel(d: string) {
@@ -78,16 +56,10 @@ export default function WeightTracker({
     unitLabel = "lb",
     className,
 }: WeightTrackerProps) {
-    // Local copy for optimistic UI updates
-    const [localData, setLocalData] = useState<WeightEntry[]>(() => data ?? []);
+    const [localData, setLocalData] = useState<WeightLog[]>(() => data ?? []);
     useEffect(() => {
         setLocalData(data ?? []);
     }, [data]);
-
-    useEffect(() => {
-        console.log(localData);
-
-    }, [])
 
     const [range, setRange] = useState<NonNullable<WeightTrackerProps["initialRange"]>>(initialRange);
     const [showModal, setShowModal] = useState(false);
@@ -127,7 +99,6 @@ export default function WeightTracker({
         const cutoffKey = toDateKey(cutoff);
         return localData.filter((e) => e.date >= cutoffKey);
     }, [localData, range]);
-console.log('filtered',filtered);
 
     // Derived stats
     const latestLabel = todayEntry ? `${todayEntry.weight} ${unitLabel}` : "--";

@@ -1,13 +1,13 @@
 'use client';
 
-import ActivityTracker from '@/components/ActivityTracker';
 import DailyGoal from '@/components/DailyGoal';
 import FoodTracker from '@/components/FoodTracker';
 import Navbar from '@/components/Navbar';
 import ThemedTabs from '@/components/ThemedTabs';
-import WaterTracker from '@/components/WaterTracker';
+import WeightTracker, { WeightEntry } from '@/components/WeightTracker';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
+import { WeightLog } from '@/types/db/WeightLog';
 import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
@@ -43,13 +43,14 @@ type Props = {
         carbs: number | null;
         fat: number | null;
     };
+    weights: WeightEntry[];
 };
 
 function getItemKey(item: FoodItem & { timestamp?: string }) {
     return `${item.name}|${item.calories}|${item.timestamp}`;
 }
 
-export default function Home({ user, dailyTotals }: Props) {
+export default function Home({ user, dailyTotals, weights }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
@@ -87,7 +88,7 @@ export default function Home({ user, dailyTotals }: Props) {
             if (data?.logs?.length > 0) {
                 const logsWithTimestamps = data.logs.map((item) => ({
                     ...item,
-                    timestamp: item.created_at ?? Date.now(), // fallback if DB didn’t return one
+                    timestamp: item.created_at ?? formatPSTDate(), // fallback if DB didn’t return one
                 })) as FoodLog[];
                 localStorage.setItem(localStorageDateKey, today);
                 localStorage.setItem(localStorageItemsKey, JSON.stringify(logsWithTimestamps));
@@ -189,6 +190,28 @@ export default function Home({ user, dailyTotals }: Props) {
         return calorieGoal - result.total.calories;
     };
 
+    const addDailyWeight = async (weight: number, date?: string) => {
+        const res = await fetch(`/api/weights`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ weight, date }),
+        });
+        if (!res.ok) throw new Error("Failed to add weight");
+        return;
+    }
+
+    const updateDailyWeight = async (date: string, weight: number) => {
+        const res = await fetch(`/api/weights/${date}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ weight }),
+        });
+        if (!res.ok) throw new Error("Failed to update weight");
+        return;
+    }
+
     return (
         <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             <Navbar />
@@ -235,13 +258,23 @@ export default function Home({ user, dailyTotals }: Props) {
                                 />
                             },
                             {
-                                title: "Water",
-                                content: <WaterTracker />
+                                title: "Weight Tracker",
+                                content: <WeightTracker
+                                    data={weights}
+                                    addDailyWeight={addDailyWeight}
+                                    updateDailyWeight={updateDailyWeight}
+                                    initialRange="7d"   // '7d' | '30d' | '365d' | 'all'
+                                    unitLabel="lb"       // or "kg"
+                                />
                             },
-                            {
-                                title: "Steps and Activity",
-                                content: <ActivityTracker />
-                            }
+                            // {
+                            //     title: "Water",
+                            //     content: <WaterTracker />
+                            // },
+                            // {
+                            //     title: "Steps and Activity",
+                            //     content: <ActivityTracker />
+                            // }
                         ]}
                     />
 
@@ -251,6 +284,13 @@ export default function Home({ user, dailyTotals }: Props) {
             </div>
         </div>
     );
+}
+
+function toDateKey(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
@@ -268,7 +308,18 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
             .prepare('SELECT SUM(calories) as calories, SUM(protein) as protein, SUM(carbs) as carbs, SUM(fat) as fat FROM food_logs WHERE user_id = ? AND date = ?')
             .get(user.id, getPSTDateString(new Date())) as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
 
-        return { props: { user, dailyTotals } };
+        const days = 7;
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - (days - 1));
+        const cutoffKey = toDateKey(cutoff);
+        console.log(cutoffKey);
+
+
+        const weights = db
+            .prepare('SELECT date, weight FROM weight_logs WHERE user_id = ? AND date >= ? ORDER BY date ASC')
+            .all(user.id, cutoffKey) as WeightLog[] || [];
+
+        return { props: { user, dailyTotals, weights } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };
     }

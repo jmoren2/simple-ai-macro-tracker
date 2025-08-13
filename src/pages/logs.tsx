@@ -36,8 +36,8 @@ export default function Logs({ user, logsByDate, calorieGoal }: Props) {
         throw new Error('Failed to delete log');
       }
 
-      localStorage.removeItem(localStorageItemsKey)
-      localStorage.removeItem(localStorageDateKey)
+      localStorage.removeItem(localStorageItemsKey);
+      localStorage.removeItem(localStorageDateKey);
 
       // Optionally, you can refresh the page or update the state to reflect the deletion
       window.location.reload();

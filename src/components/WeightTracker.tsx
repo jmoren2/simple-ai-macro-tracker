@@ -196,6 +196,7 @@ export default function WeightTracker({
                             <XAxis dataKey="date" tickFormatter={shortDateLabel} fontSize={12} tickMargin={8} />
                             <YAxis domain={["auto", "auto"]} fontSize={12} width={40} />
                             <Tooltip
+                                labelClassName="text-black"
                                 labelFormatter={(label) => new Date(label).toLocaleDateString()}
                                 formatter={(value: any) => [`${value} ${unitLabel}`, "Weight"]}
                             />

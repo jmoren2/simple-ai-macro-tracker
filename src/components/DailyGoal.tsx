@@ -74,15 +74,15 @@ export default function DailyGoal({
 
             <div className="text-xs">
                 <span>
-                    Protein: <strong>{dailyTotals.protein ?? 0}g</strong>
+                    Protein: <strong>{dailyTotals.protein?.toFixed(1) ?? 0}g</strong>
                 </span>{" "}
                 <span className="mx-2">|</span>
                 <span>
-                    Carbs: <strong>{dailyTotals.carbs ?? 0}g</strong>
+                    Carbs: <strong>{dailyTotals.carbs?.toFixed(1) ?? 0}g</strong>
                 </span>{" "}
                 <span className="mx-2">|</span>
                 <span>
-                    Fat: <strong>{dailyTotals.fat ?? 0}g</strong>
+                    Fat: <strong>{dailyTotals.fat?.toFixed(1) ?? 0}g</strong>
                 </span>
             </div>
 

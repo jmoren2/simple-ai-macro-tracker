@@ -48,17 +48,6 @@ export default function DailyGoal({
 
     return (<>
         <div className="mb-6 text-center">
-            <div className="flex items-center justify-center space-x-2">
-                <span className="text-md">🎯 Daily Goal:</span>
-                <strong className="text-md">{calorieGoal} cal</strong>
-                <button
-                    onClick={() => setUpdatingGoal(true)}
-                    className="text-orange-400 hover:text-orange-300"
-                >
-                    <FaPencilAlt size={14} />
-                </button>
-            </div>
-
             <div className="text-sm">
                 <span>Calories eaten today: </span>
                 <strong
@@ -94,6 +83,16 @@ export default function DailyGoal({
                         : calorieGoal}{" "}
                     cal
                 </strong>
+            </div>
+            <div className="flex items-center justify-center space-x-2 text-xs">
+                <span>🎯 Daily Goal:</span>
+                <strong>{calorieGoal} cal</strong>
+                <button
+                    onClick={() => setUpdatingGoal(true)}
+                    className="text-orange-400 hover:text-orange-300 cursor-pointer"
+                >
+                    <FaPencilAlt size={10} />
+                </button>
             </div>
         </div>
         {updatingGoal && (

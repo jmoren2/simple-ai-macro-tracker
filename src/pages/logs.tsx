@@ -119,8 +119,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
       method: 'GET',
       headers: { cookie: req.headers.cookie ?? '' }
     })).json() as { logs: FoodLog[] };
-    console.log(res);
-
 
     const logsByDate: Record<string, FoodLog[]> = {};
     for (const row of res.logs) {

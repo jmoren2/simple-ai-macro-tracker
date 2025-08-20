@@ -72,8 +72,6 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                 headers: { 'Content-Type': 'application/json' },
             });
             const data = await res.json();
-            console.log(data.names);
-
             setSuggestions(data.names || []);
         };
 
@@ -168,9 +166,8 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         );
 
         // 3. Analyze all items regardless
-        const res = await fetch('/api/analyze-calories', {
+        const res = await apiFetch(`${apiUrl}/analyze/calories`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items }),
         });
 
@@ -180,9 +177,8 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
 
         // 4. Only send new items to DB
         if (newItems.length > 0) {
-            await fetch('/api/create-log', {
+            await apiFetch(`${apiUrl}/food/logs`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items: newItems, result: data }),
             });
 

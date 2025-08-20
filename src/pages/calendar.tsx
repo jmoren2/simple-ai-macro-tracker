@@ -22,8 +22,6 @@ type Props = {
 };
 
 export default function Calendar({ history }: Props) {
-    console.log(history);
-
     const dateMap = useMemo(() => {
         const map: Record<string, 'under' | 'over' | 'exact'> = {};
         for (const { date, total, goal } of history) {

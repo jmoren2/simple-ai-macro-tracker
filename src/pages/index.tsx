@@ -55,7 +55,6 @@ export default function Index(props: { apiUrl: string }) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Login failed');
       }
-      console.log(await res.text());
 
       router.push('/home');
     } catch (err: unknown) {

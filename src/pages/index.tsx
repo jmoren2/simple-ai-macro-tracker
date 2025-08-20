@@ -32,7 +32,9 @@ export default function Index(props: { apiUrl: string }) {
       }
 
       // Cookie is set by backend → user is logged in
-      router.push('/home');
+      if (router.pathname !== '/home') {
+        router.push('/home');
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -56,7 +58,9 @@ export default function Index(props: { apiUrl: string }) {
         throw new Error(data.error || 'Login failed');
       }
 
-      router.push('/home');
+      if (router.pathname !== '/home') {
+        router.push('/home');
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {

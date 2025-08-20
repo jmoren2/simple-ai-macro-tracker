@@ -5,6 +5,8 @@ import { GetServerSideProps } from 'next';
 
 export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
   try {
+    console.log('Logging out user...');
+
     await apiFetch(`${process.env.SHTAI_API_URL!}/auth/logout`, {
       method: 'POST',
       headers: {

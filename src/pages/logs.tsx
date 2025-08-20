@@ -103,9 +103,14 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const meRes = await apiFetch(`${apiUrl}/user/me`, {
     headers: { cookie: req.headers.cookie ?? '' }
   });
+  if(meRes.status !== 200) {
+    return { redirect: { destination: '/', permanent: false } };
+  }
 
   try {
     const user = await meRes.json() as User | null;
+    console.log('User:', user);
+
     if (!user) {
       console.log('User not found');
       return { redirect: { destination: '/', permanent: false } };

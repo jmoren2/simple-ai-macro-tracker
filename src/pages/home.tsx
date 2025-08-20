@@ -298,14 +298,17 @@ function toDateKey(d = new Date()) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const apiUrl = process.env.SHTAI_API_URL;
-    const res = await apiFetch(`${apiUrl}/user/me`, {
+    const meRes = await apiFetch(`${apiUrl}/user/me`, {
         headers: {
             cookie: req.headers.cookie || '',
         },
     });
+    if (meRes.status !== 200) {
+        return { redirect: { destination: '/', permanent: false } };
+    }
 
     try {
-        const user = await res.json() as User;
+        const user = await meRes.json() as User;
         if (!user) {
             console.error('User not found');
             return { redirect: { destination: '/', permanent: false } };

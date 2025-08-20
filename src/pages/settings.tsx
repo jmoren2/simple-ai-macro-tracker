@@ -88,12 +88,15 @@ export default function Settings({ user, apiUrl }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const apiUrl = process.env.SHTAI_API_URL;
-  const res = await apiFetch(`${apiUrl}/user/me`, {
+  const meRes = await apiFetch(`${apiUrl}/user/me`, {
     headers: { cookie: req.headers.cookie ?? '' }
   });
+  if (meRes.status !== 200) {
+    return { redirect: { destination: '/', permanent: false } };
+  }
 
   try {
-    const user = await res.json() as User | null;
+    const user = await meRes.json() as User | null;
     if (!user) {
       console.log('User not found');
       return { redirect: { destination: '/', permanent: false } };

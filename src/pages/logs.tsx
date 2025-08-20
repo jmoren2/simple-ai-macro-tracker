@@ -100,25 +100,25 @@ export default function Logs({ user, logsByDate, calorieGoal, apiUrl }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const apiUrl = process.env.SHTAI_API_URL;
-  const res = await apiFetch(`${apiUrl}/user/me`, {
+  const meRes = await apiFetch(`${apiUrl}/user/me`, {
     headers: { cookie: req.headers.cookie ?? '' }
   });
 
   try {
-    const user = await res.json() as User | null;
+    const user = await meRes.json() as User | null;
     if (!user) {
       console.log('User not found');
       return { redirect: { destination: '/', permanent: false } };
     }
 
     const calorieGoal = user.calorie_goal;
-    const res = await (await apiFetch(`${apiUrl}/food/logs`, {
+    const logs = await (await apiFetch(`${apiUrl}/food/logs`, {
       method: 'GET',
       headers: { cookie: req.headers.cookie ?? '' }
     })).json() as { logs: FoodLog[] };
 
     const logsByDate: Record<string, FoodLog[]> = {};
-    for (const row of res.logs) {
+    for (const row of logs.logs) {
       if (!logsByDate[row.date]) logsByDate[row.date] = [];
       logsByDate[row.date].push(row);
     }

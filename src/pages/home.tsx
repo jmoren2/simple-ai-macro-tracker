@@ -297,19 +297,16 @@ function toDateKey(d = new Date()) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const apiUrl = process.env.SHTAI_API_URL;
-    const res = await fetch(`${apiUrl}/users/me`, {
+    const res = await apiFetch(`${apiUrl}/user/me`, {
         headers: {
             cookie: req.headers.cookie || '',
         },
-        credentials: 'include',
     });
-    if (res.status !== 200) {
-        return { redirect: { destination: '/', permanent: false } };
-    }
 
     try {
         const user = await res.json() as User;
         if (!user) {
+            console.error('User not found');
             return { redirect: { destination: '/', permanent: false } };
         }
 
@@ -328,6 +325,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
         return { props: { user, dailyTotals, weights, apiUrl: process.env.SHTAI_API_URL, } };
     } catch {
+        console.error('Failed to fetch user data:', res.statusText);
         return { redirect: { destination: '/', permanent: false } };
     }
 };

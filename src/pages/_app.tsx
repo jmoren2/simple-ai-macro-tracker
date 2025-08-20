@@ -41,7 +41,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#1f1f1f" />
       </Head>
       <main className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {loading && <div className="fixed top-0 left-0 w-full h-1 bg-blue-500 animate-pulse" />}
+        {loading && <div className="fixed top-0 left-0 w-full h-1 bg-[color:var(--accent)] animate-pulse" />}
         <Component {...pageProps} />
       </main>
     </>

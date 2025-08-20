@@ -85,7 +85,8 @@ export default function Logs({ user, calorieGoal, apiUrl }: Props) {
               <button
                 onClick={fetchMore}
                 disabled={loading}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+                className="mt-4 px-4 py-2 rounded cursor-pointer"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
               >
                 {loading ? "Loading..." : "Load More"}
               </button>
@@ -103,7 +104,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const meRes = await apiFetch(`${apiUrl}/user/me`, {
     headers: { cookie: req.headers.cookie ?? '' }
   });
-  if(meRes.status !== 200) {
+  if (meRes.status !== 200) {
     return { redirect: { destination: '/', permanent: false } };
   }
 

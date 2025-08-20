@@ -1,16 +1,14 @@
 // pages/logout.tsx
+import { apiFetch } from '@/utils/api';
 import { setCookie } from 'cookies-next';
 import { GetServerSideProps } from 'next';
 
 export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
-  await fetch(`${process.env.SHTAI_API_URL!}/auth/logout`, {
+  await apiFetch(`${process.env.SHTAI_API_URL!}/auth/logout`, {
     method: 'POST',
     headers: {
       cookie: req.headers.cookie || '', // forward incoming cookies
-      'Content-Type': 'application/json',
     },
-    credentials: 'include',
-
   });
 
   setCookie('SHTAIToken', '', {

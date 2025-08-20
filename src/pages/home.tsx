@@ -300,6 +300,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const cookie = req.headers.cookie || '';
     const match = cookie.match(/SHTAIToken=([^;]+)/);
     if (!match) {
+        console.log('No token found, redirecting to home');
+
         return { redirect: { destination: '/', permanent: false } };
     }
 

@@ -23,6 +23,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
       path: '/',
       secure: isDeployed, // Use secure cookies in production
       sameSite: isDeployed ? 'none' : 'lax', // Use lax SameSite policy
+      httpOnly: true, // Make cookie HTTP-only for security
     });
 
     return {

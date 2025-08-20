@@ -185,6 +185,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const res = await apiFetch(`${apiUrl}/user/me`, {
     headers: { cookie: req.headers.cookie ?? '' }
   });
+  if (res.status !== 200) {
+    return { props: { apiUrl } };
+  }
 
   const user = await res.json() as User | null;
   if (user) {

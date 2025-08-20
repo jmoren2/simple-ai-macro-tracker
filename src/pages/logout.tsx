@@ -14,10 +14,15 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
       },
     });
 
+    const isDeployed = process.env.ENV === 'prod' || process.env.ENV === 'stage';
+
     setCookie('SHTAIToken', '', {
       req,
       res,
       maxAge: -1, // Set cookie to expire immediately
+      path: '/',
+      secure: isDeployed, // Use secure cookies in production
+      sameSite: isDeployed ? 'none' : 'lax', // Use lax SameSite policy
     });
 
     return {

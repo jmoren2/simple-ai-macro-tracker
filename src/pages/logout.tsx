@@ -4,24 +4,34 @@ import { setCookie } from 'cookies-next';
 import { GetServerSideProps } from 'next';
 
 export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
-  await apiFetch(`${process.env.SHTAI_API_URL!}/auth/logout`, {
-    method: 'POST',
-    headers: {
-      cookie: req.headers.cookie || '', // forward incoming cookies
-    },
-  });
+  try {
+    await apiFetch(`${process.env.SHTAI_API_URL!}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        cookie: req.headers.cookie || '', // forward incoming cookies
+      },
+    });
 
-  setCookie('SHTAIToken', '', {
-    req,
-    res,
-    maxAge: -1, // Set cookie to expire immediately
-  });
+    setCookie('SHTAIToken', '', {
+      req,
+      res,
+      maxAge: -1, // Set cookie to expire immediately
+    });
 
-  return {
-    redirect: {
-      destination: '/',
-      permanent: false,
-    },
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  } catch (error) {
+    console.error('Logout failed:', error);
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    }
   };
 };
 

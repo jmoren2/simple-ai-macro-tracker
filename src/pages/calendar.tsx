@@ -10,8 +10,6 @@ import 'react-calendar/dist/Calendar.css';
 
 const ReactCalendar = dynamic(() => import('react-calendar'), { ssr: false });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
-
 type Entry = {
     date: string;
     total: number;

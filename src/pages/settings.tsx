@@ -2,17 +2,17 @@
 
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
+import { apiFetch } from '@/utils/api';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
-
 type Props = {
   user: User;
+  apiUrl: string;
 };
 
-export default function Settings({ user }: Props) {
+export default function Settings({ user, apiUrl }: Props) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [password, setPassword] = useState('');
@@ -25,9 +25,8 @@ export default function Settings({ user }: Props) {
       return;
     }
 
-    const res = await fetch('/api/update-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await apiFetch(`${apiUrl}/user/me`, {
+      method: 'PUT',
       body: JSON.stringify({ name, email, password }),
     });
 
@@ -89,17 +88,19 @@ export default function Settings({ user }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const token = req.cookies?.macroAIToken;
-  if (!token) {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/SHTAIToken=([^;]+)/);
+
+  if (!match) {
     return { redirect: { destination: '/', permanent: false } };
   }
-
   try {
-    const user = jwt.verify(token, JWT_SECRET) as User;
+    const token = match[1];
+    const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
     if (!user) {
       return { redirect: { destination: '/', permanent: false } };
     }
-    return { props: { user } };
+    return { props: { user, apiUrl: process.env.SHTAI_API_URL! } };
   } catch (err) {
     console.log(err);
     return { redirect: { destination: '/', permanent: false } };

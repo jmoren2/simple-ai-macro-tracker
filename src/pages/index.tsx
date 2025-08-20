@@ -1,8 +1,11 @@
+import { User } from '@/types/db/User';
+import { apiFetch } from '@/utils/api';
+import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
-export default function Index() {
+export default function Index(props: { apiUrl: string }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState<'create' | 'login' | false>(false);
   const [email, setEmail] = useState('');
@@ -16,22 +19,25 @@ export default function Index() {
     setLoading(true);
     setError(null);
     setMessage(null);
+    try {
+      const res = await apiFetch(`${props.apiUrl}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, password }),
+      });
 
-    const res = await fetch('/api/create-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, password }),
-    });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to create account');
+      }
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || 'Something went wrong');
-    } else {
+      // Cookie is set by backend → user is logged in
       router.push('/home');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleLogin = async () => {
@@ -39,21 +45,23 @@ export default function Index() {
     setError(null);
     setMessage(null);
 
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await apiFetch(`${props.apiUrl}/auth/login`, {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Login failed');
+      }
 
-    if (!res.ok) {
-      setError(data.error || 'Login failed');
-    } else {
       router.push('/home');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -170,13 +178,22 @@ export default function Index() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const token = req.cookies?.macroAIToken;
-  if (token) {
-    return { redirect: { destination: '/home', permanent: false } };
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/SHTAIToken=([^;]+)/);
+  if (match) {
+    const token = match[1];
+    const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+    if (user) {
+      return { redirect: { destination: '/home', permanent: false } };
+    }
   }
 
   try {
-    return { props: {} };
+    return {
+      props: {
+        apiUrl: process.env.SHTAI_API_URL!,
+      }
+    };
   } catch {
     return { redirect: { destination: '/', permanent: false } };
   }

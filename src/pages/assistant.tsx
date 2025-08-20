@@ -4,8 +4,6 @@ import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
-
 type Props = {
     user: User;
 };
@@ -31,17 +29,19 @@ export default function Assistant({ user }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const token = req.cookies?.macroAIToken;
-    if (!token) {
+    const cookie = req.headers.cookie || '';
+    const match = cookie.match(/SHTAIToken=([^;]+)/);
+
+    if (!match) {
         return { redirect: { destination: '/', permanent: false } };
     }
-
     try {
-        const user = jwt.verify(token, JWT_SECRET) as User;
+        const token = match[1];
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
         if (!user) {
             return { redirect: { destination: '/', permanent: false } };
         }
-
         return { props: { user } };
     } catch (err) {
         console.log(err);

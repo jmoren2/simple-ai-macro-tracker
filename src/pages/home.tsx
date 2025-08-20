@@ -9,7 +9,7 @@ import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { WeightLog } from '@/types/db/WeightLog';
 import { apiFetch } from '@/utils/api';
-import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
+import { clearLocalStorageItems, formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 
@@ -185,6 +185,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
             const updatedSaved = [...savedItems, ...newItems];
             localStorage.setItem(localStorageItemsKey, JSON.stringify(updatedSaved));
         }
+        clearLocalStorageItems(user.email);
     };
 
     const caloriesRemaining = () => {
@@ -321,9 +322,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         const weights = await (await apiFetch(`${url}/weight/logs?range=7d`, {
             method: 'GET',
             headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as WeightLog[] || [];
+        })).json() as { data: WeightLog[] };
 
-        return { props: { user, dailyTotals, weights, apiUrl: process.env.SHTAI_API_URL, } };
+        return { props: { user, dailyTotals, weights: weights.data, apiUrl: process.env.SHTAI_API_URL, } };
     } catch {
         console.error('Failed to fetch user data:', res.statusText);
         return { redirect: { destination: '/', permanent: false } };

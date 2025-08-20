@@ -1,29 +1,19 @@
 import Navbar from '@/components/Navbar';
+import { useFoodLogsByDay } from '@/hooks/useFoodLogsByDay';
 import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
+import { clearLocalStorageItems } from '@/utils/utils';
 import { GetServerSideProps } from 'next';
 import { MdOutlineCancel } from 'react-icons/md';
 
-type FoodLog = {
-  id: number;
-  date: string;
-  name: string;
-  calories: number | null;
-  protein: number | null;
-  fat: number | null;
-  carbs: number | null;
-};
-
 type Props = {
   user: User;
-  logsByDate: Record<string, FoodLog[]>;
   calorieGoal: number;
   apiUrl: string;
 };
 
-export default function Logs({ user, logsByDate, calorieGoal, apiUrl }: Props) {
-  const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
-  const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
+export default function Logs({ user, calorieGoal, apiUrl }: Props) {
+  const { logsByDate, fetchMore, hasMore, loading } = useFoodLogsByDay(apiUrl);
   const handleDeleteLog = async (id: number) => {
     try {
       const response = await apiFetch(`${apiUrl}/food/log/${id}`, {
@@ -33,10 +23,7 @@ export default function Logs({ user, logsByDate, calorieGoal, apiUrl }: Props) {
       if (!response.ok) {
         throw new Error('Failed to delete log');
       }
-
-      localStorage.removeItem(localStorageItemsKey);
-      localStorage.removeItem(localStorageDateKey);
-
+      clearLocalStorageItems(user.email);
       // Optionally, you can refresh the page or update the state to reflect the deletion
       window.location.reload();
     } catch (error) {
@@ -92,6 +79,19 @@ export default function Logs({ user, logsByDate, calorieGoal, apiUrl }: Props) {
             );
           })
         )}
+        {
+          hasMore && (
+            <div className="flex justify-center">
+              <button
+                onClick={fetchMore}
+                disabled={loading}
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                {loading ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )
+        }
       </div>
     </div>
   );
@@ -111,19 +111,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
       return { redirect: { destination: '/', permanent: false } };
     }
 
-    const calorieGoal = user.calorie_goal;
-    const logs = await (await apiFetch(`${apiUrl}/food/logs`, {
-      method: 'GET',
-      headers: { cookie: req.headers.cookie ?? '' }
-    })).json() as { logs: FoodLog[] };
-
-    const logsByDate: Record<string, FoodLog[]> = {};
-    for (const row of logs.logs) {
-      if (!logsByDate[row.date]) logsByDate[row.date] = [];
-      logsByDate[row.date].push(row);
-    }
-
-    return { props: { user, logsByDate, calorieGoal, apiUrl } };
+    return { props: { user, calorieGoal: user.calorie_goal, apiUrl } };
   } catch (err) {
     console.log(err);
 

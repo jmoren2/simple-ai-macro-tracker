@@ -28,6 +28,5 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
 };
 
 export default function Logout() {
-  localStorage.clear(); // Clear local storage on client side
   return null; // This page will never actually render
 }

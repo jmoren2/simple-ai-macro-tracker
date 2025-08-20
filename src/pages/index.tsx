@@ -1,6 +1,4 @@
-import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
-import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -182,23 +180,20 @@ export default function Index(props: { apiUrl: string }) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const cookie = req.headers.cookie || '';
-  const match = cookie.match(/SHTAIToken=([^;]+)/);
-  if (match) {
-    const token = match[1];
-    const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
-    if (user) {
-      return { redirect: { destination: '/home', permanent: false } };
-    }
-  }
-
-  try {
-    return {
-      props: {
-        apiUrl: process.env.SHTAI_API_URL!,
-      }
-    };
-  } catch {
+  const apiUrl = process.env.SHTAI_API_URL;
+  const res = await fetch(`${apiUrl}/users/me`, {
+    headers: {
+      cookie: req.headers.cookie || '',
+    },
+    credentials: 'include',
+  });
+  if (res.status !== 200) {
     return { redirect: { destination: '/', permanent: false } };
   }
+
+  return {
+    props: {
+      apiUrl,
+    }
+  };
 };

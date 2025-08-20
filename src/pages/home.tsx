@@ -10,7 +10,6 @@ import { User } from '@/types/db/User';
 import { WeightLog } from '@/types/db/WeightLog';
 import { apiFetch } from '@/utils/api';
 import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
-import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 
@@ -297,16 +296,19 @@ function toDateKey(d = new Date()) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const cookie = req.headers.cookie || '';
-    const match = cookie.match(/SHTAIToken=([^;]+)/);
-    if (!match) {
-        console.log('No token found, redirecting to home');
+    const apiUrl = process.env.SHTAI_API_URL;
+    const res = await fetch(`${apiUrl}/users/me`, {
+        headers: {
+            cookie: req.headers.cookie || '',
+        },
+        credentials: 'include',
+    });
+    if (res.status !== 200) {
         return { redirect: { destination: '/', permanent: false } };
     }
 
     try {
-        const token = match[1];
-        const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+        const user = await res.json() as User;
         if (!user) {
             return { redirect: { destination: '/', permanent: false } };
         }

@@ -1,3 +1,4 @@
+import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -181,14 +182,13 @@ export default function Index(props: { apiUrl: string }) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const apiUrl = process.env.SHTAI_API_URL;
-  const res = await fetch(`${apiUrl}/users/me`, {
-    headers: {
-      cookie: req.headers.cookie || '',
-    },
-    credentials: 'include',
+  const res = await apiFetch(`${apiUrl}/user/me`, {
+    headers: { cookie: req.headers.cookie ?? '' }
   });
-  if (res.status !== 200) {
-    return { redirect: { destination: '/', permanent: false } };
+
+  const user = await res.json() as User | null;
+  if (user) {
+    return { redirect: { destination: '/home', permanent: false } };
   }
 
   return {

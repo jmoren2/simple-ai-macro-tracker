@@ -1,6 +1,6 @@
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
-import jwt from 'jsonwebtoken';
+import { apiFetch } from '@/utils/api';
 import { GetServerSideProps } from 'next';
 
 type Props = {
@@ -20,17 +20,15 @@ export default function Pricing({ user }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const cookie = req.headers.cookie || '';
-    const match = cookie.match(/SHTAIToken=([^;]+)/);
+    const apiUrl = process.env.SHTAI_API_URL;
+    const res = await apiFetch(`${apiUrl}/user/me`, {
+        headers: { cookie: req.headers.cookie ?? '' }
+    });
 
-    if (!match) {
-        return { redirect: { destination: '/', permanent: false } };
-    }
     try {
-        const token = match[1];
-
-        const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+        const user = await res.json() as User | null;
         if (!user) {
+            console.log('User not found');
             return { redirect: { destination: '/', permanent: false } };
         }
         return { props: { user } };

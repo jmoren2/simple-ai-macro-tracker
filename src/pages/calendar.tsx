@@ -2,7 +2,6 @@
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
-import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
@@ -77,21 +76,18 @@ export default function Calendar({ history }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const cookie = req.headers.cookie || '';
-    const match = cookie.match(/SHTAIToken=([^;]+)/);
-    if (!match) {
-        console.log('No token found');
-        return { redirect: { destination: '/', permanent: false } };
-    }
+    const apiUrl = process.env.SHTAI_API_URL;
+    const res = await apiFetch(`${apiUrl}/user/me`, {
+        headers: { cookie: req.headers.cookie ?? '' }
+    });
 
     try {
-        const token = match[1];
-        const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+        const user = await res.json() as User | null;
         if (!user) {
             console.log('User not found');
-
             return { redirect: { destination: '/', permanent: false } };
         }
+
         const apiUrl = process.env.SHTAI_API_URL!;
         const data = await (await apiFetch(`${apiUrl}/food/calendar`, {
             method: 'GET',

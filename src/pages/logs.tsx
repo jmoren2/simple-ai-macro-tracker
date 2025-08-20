@@ -1,7 +1,6 @@
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
-import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { MdOutlineCancel } from 'react-icons/md';
 
@@ -100,21 +99,19 @@ export default function Logs({ user, logsByDate, calorieGoal, apiUrl }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const cookie = req.headers.cookie || '';
-  const match = cookie.match(/SHTAIToken=([^;]+)/);
-  if (!match) {
-    return { redirect: { destination: '/', permanent: false } };
-  }
+  const apiUrl = process.env.SHTAI_API_URL;
+  const res = await apiFetch(`${apiUrl}/user/me`, {
+    headers: { cookie: req.headers.cookie ?? '' }
+  });
 
   try {
-    const token = match[1];
-    const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+    const user = await res.json() as User | null;
     if (!user) {
+      console.log('User not found');
       return { redirect: { destination: '/', permanent: false } };
     }
 
     const calorieGoal = user.calorie_goal;
-    const apiUrl = process.env.SHTAI_API_URL!;
     const res = await (await apiFetch(`${apiUrl}/food/logs`, {
       method: 'GET',
       headers: { cookie: req.headers.cookie ?? '' }

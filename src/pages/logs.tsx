@@ -1,11 +1,9 @@
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
+import { apiFetch } from '@/utils/api';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { MdOutlineCancel } from 'react-icons/md';
-import db from '../../db/db';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
 
 type FoodLog = {
   id: number;
@@ -21,14 +19,15 @@ type Props = {
   user: User;
   logsByDate: Record<string, FoodLog[]>;
   calorieGoal: number;
+  apiUrl: string;
 };
 
-export default function Logs({ user, logsByDate, calorieGoal }: Props) {
+export default function Logs({ user, logsByDate, calorieGoal, apiUrl }: Props) {
   const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
   const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
   const handleDeleteLog = async (id: number) => {
     try {
-      const response = await fetch(`/api/delete-log/${id}`, {
+      const response = await apiFetch(`${apiUrl}/food/log/${id}`, {
         method: 'DELETE',
       });
 
@@ -101,34 +100,35 @@ export default function Logs({ user, logsByDate, calorieGoal }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const token = req.cookies?.macroAIToken;
-  if (!token) {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/SHTAIToken=([^;]+)/);
+  if (!match) {
     return { redirect: { destination: '/', permanent: false } };
   }
 
   try {
-    const user = jwt.verify(token, JWT_SECRET) as User;
+    const token = match[1];
+    const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
     if (!user) {
       return { redirect: { destination: '/', permanent: false } };
     }
 
     const calorieGoal = user.calorie_goal;
-    const rows = db
-      .prepare(
-        `SELECT id, date, name, calories, protein, fat, carbs
-         FROM food_logs
-         WHERE user_id = ?
-         ORDER BY created_at DESC`
-      )
-      .all(user.id) as FoodLog[];
+    const apiUrl = process.env.SHTAI_API_URL!;
+    const res = await (await apiFetch(`${apiUrl}/food/logs`, {
+      method: 'GET',
+      headers: { cookie: req.headers.cookie ?? '' }
+    })).json() as { logs: FoodLog[] };
+    console.log(res);
+
 
     const logsByDate: Record<string, FoodLog[]> = {};
-    for (const row of rows) {
+    for (const row of res.logs) {
       if (!logsByDate[row.date]) logsByDate[row.date] = [];
       logsByDate[row.date].push(row);
     }
 
-    return { props: { user, logsByDate, calorieGoal } };
+    return { props: { user, logsByDate, calorieGoal, apiUrl } };
   } catch (err) {
     console.log(err);
 

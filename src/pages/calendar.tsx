@@ -1,12 +1,12 @@
 // pages/summary.tsx
 import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
+import { apiFetch } from '@/utils/api';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 import 'react-calendar/dist/Calendar.css';
-import db from '../../db/db';
 
 const ReactCalendar = dynamic(() => import('react-calendar'), { ssr: false });
 
@@ -81,28 +81,36 @@ export default function Calendar({ history }: Props) {
 
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const token = req.cookies?.macroAIToken;
-    if (!token) return { redirect: { destination: '/', permanent: false } };
+    const cookie = req.headers.cookie || '';
+    const match = cookie.match(/SHTAIToken=([^;]+)/);
+    if (!match) {
+        console.log('No token found');
+        return { redirect: { destination: '/', permanent: false } };
+    }
 
     try {
-        const user = jwt.verify(token, JWT_SECRET) as User;
-        const history = db.prepare(`
-            SELECT date, SUM(calories) as total
-            FROM food_logs
-            WHERE user_id = ?
-            GROUP BY date
-            ORDER BY date DESC
-            LIMIT 60
-    `).all(user.id) as { date: string; total: number }[];
+        const token = match[1];
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+        if (!user) {
+            console.log('User not found');
 
-        const result = history.map((entry) => ({
+            return { redirect: { destination: '/', permanent: false } };
+        }
+        const apiUrl = process.env.SHTAI_API_URL!;
+        const data = await (await apiFetch(`${apiUrl}/food/calendar`, {
+            method: 'GET',
+            headers: { cookie: req.headers.cookie ?? '' }
+        })).json() as { history: { date: string; total: number }[] };
+
+        const result = data.history.map((entry) => ({
             date: entry.date,
             total: entry.total,
             goal: user.calorie_goal,
         }));
 
         return { props: { user, history: result } };
-    } catch {
+    } catch (error) {
+        console.log('Error fetching calendar data:', error);
         return { redirect: { destination: '/', permanent: false } };
     }
 };

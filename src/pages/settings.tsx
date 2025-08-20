@@ -89,13 +89,15 @@ export default function Settings({ user }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const token = req.cookies?.macroAIToken;
-  if (!token) {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/SHTAIToken=([^;]+)/);
+
+  if (!match) {
     return { redirect: { destination: '/', permanent: false } };
   }
-
   try {
-    const user = jwt.verify(token, JWT_SECRET) as User;
+    const token = match[1];
+    const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
     if (!user) {
       return { redirect: { destination: '/', permanent: false } };
     }

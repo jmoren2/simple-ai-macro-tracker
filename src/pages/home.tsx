@@ -4,17 +4,15 @@ import DailyGoal from '@/components/DailyGoal';
 import FoodTracker from '@/components/FoodTracker';
 import Navbar from '@/components/Navbar';
 import ThemedTabs from '@/components/ThemedTabs';
-import WeightTracker, { WeightEntry } from '@/components/WeightTracker';
+import WeightTracker from '@/components/WeightTracker';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { WeightLog } from '@/types/db/WeightLog';
+import { apiFetch } from '@/utils/api';
 import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
-import db from '../../db/db';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretdevtoken';
 
 type FoodItem = {
     name: string;
@@ -43,14 +41,15 @@ type Props = {
         carbs: number | null;
         fat: number | null;
     };
-    weights: WeightEntry[];
+    weights: WeightLog[];
+    apiUrl: string;
 };
 
 function getItemKey(item: FoodItem & { timestamp?: string }) {
     return `${item.name}|${item.calories}|${item.timestamp}`;
 }
 
-export default function Home({ user, dailyTotals, weights }: Props) {
+export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
@@ -68,13 +67,18 @@ export default function Home({ user, dailyTotals, weights }: Props) {
 
     useEffect(() => {
         const fetchFoodNames = async () => {
-            const res = await fetch('/api/get-food-names');
+            const res = await apiFetch(`${apiUrl}/food/names`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
             const data = await res.json();
+            console.log(data.names);
+
             setSuggestions(data.names || []);
         };
 
         fetchFoodNames();
-    }, []);
+    }, [apiUrl]);
 
     useEffect(() => {
         const today = getPSTDateString(new Date());
@@ -82,7 +86,10 @@ export default function Home({ user, dailyTotals, weights }: Props) {
         const lastSavedItems = localStorage.getItem(localStorageItemsKey);
 
         const hydrateFromDB = async () => {
-            const res = await fetch(`/api/get-food-logs?date=${today}`);
+            const res = await apiFetch(`${apiUrl}/food/logs?date=${today}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
             const data = await res.json() as { logs: FoodLog[] };
 
             if (data?.logs?.length > 0) {
@@ -108,17 +115,17 @@ export default function Home({ user, dailyTotals, weights }: Props) {
             setItems(JSON.parse(lastSavedItems));
             setAlreadySavedToday(JSON.parse(lastSavedItems)); // Also hydrate saved state
         }
-    }, [localStorageDateKey, localStorageItemsKey, user?.email]);
+    }, [localStorageDateKey, localStorageItemsKey, user?.email, apiUrl]);
 
     useEffect(() => {
         localStorage.setItem(localStorageItemsKey, JSON.stringify(items));
     }, [items, localStorageItemsKey]);
 
     const saveGoal = async () => {
-        const res = await fetch('/api/update-calorie-goal', {
-            method: 'POST',
+        const res = await apiFetch(`${apiUrl}/user/me`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ calorieGoal }),
+            body: JSON.stringify({ calorie_goal: calorieGoal }),
         });
 
         const data = await res.json();
@@ -294,32 +301,33 @@ function toDateKey(d = new Date()) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const token = req.cookies?.macroAIToken;
-    if (!token) {
+    const cookie = req.headers.cookie || '';
+    const match = cookie.match(/SHTAIToken=([^;]+)/);
+    if (!match) {
         return { redirect: { destination: '/', permanent: false } };
     }
 
     try {
-        const user = jwt.verify(token, JWT_SECRET) as User;
-        if (!user) throw new Error('User not found');
+        const token = match[1];
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as User;
+        if (!user) {
+            return { redirect: { destination: '/', permanent: false } };
+        }
 
         // Get today's date in PST (America/Los_Angeles)
-        const dailyTotals = db
-            .prepare('SELECT SUM(calories) as calories, SUM(protein) as protein, SUM(carbs) as carbs, SUM(fat) as fat FROM food_logs WHERE user_id = ? AND date = ?')
-            .get(user.id, getPSTDateString(new Date())) as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
+        const today = getPSTDateString(new Date());
+        const url = process.env.SHTAI_API_URL!;
+        const dailyTotals = await (await apiFetch(`${url}/food/dailyTotals?date=${today}`, {
+            method: 'GET',
+            headers: { cookie: req.headers.cookie ?? '' }
+        })).json() as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
 
-        const days = 7;
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - (days - 1));
-        const cutoffKey = toDateKey(cutoff);
-        console.log(cutoffKey);
+        const weights = await (await apiFetch(`${url}/weight/logs?range=7d`, {
+            method: 'GET',
+            headers: { cookie: req.headers.cookie ?? '' }
+        })).json() as WeightLog[] || [];
 
-
-        const weights = db
-            .prepare('SELECT date, weight FROM weight_logs WHERE user_id = ? AND date >= ? ORDER BY date ASC')
-            .all(user.id, cutoffKey) as WeightLog[] || [];
-
-        return { props: { user, dailyTotals, weights } };
+        return { props: { user, dailyTotals, weights, apiUrl: process.env.SHTAI_API_URL, } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };
     }

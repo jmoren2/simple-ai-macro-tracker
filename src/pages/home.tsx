@@ -201,7 +201,6 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
             });
         } catch (error) {
             console.error('Error posting daily weight:', error);
-            return null;
         }
     }
 

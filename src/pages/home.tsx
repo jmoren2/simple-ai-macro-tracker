@@ -320,16 +320,16 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         const dailyTotals = await (await apiFetch(`${url}/food/dailyTotals?date=${today}`, {
             method: 'GET',
             headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as { calories: number | null, protein: number | null, carbs: number | null, fat: number | null };
+        })).json() as { dailyTotals: { calories: number | null, protein: number | null, carbs: number | null, fat: number | null } };
 
         const weights = await (await apiFetch(`${url}/weight/logs?range=7d`, {
             method: 'GET',
             headers: { cookie: req.headers.cookie ?? '' }
         })).json() as { data: WeightLog[] };
 
-        return { props: { user, dailyTotals, weights: weights.data, apiUrl: process.env.SHTAI_API_URL, } };
-    } catch {
-        console.error('Failed to fetch user data:', res.statusText);
+        return { props: { user, dailyTotals: dailyTotals.dailyTotals, weights: weights.data, apiUrl: process.env.SHTAI_API_URL, } };
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
         return { redirect: { destination: '/', permanent: false } };
     }
 };

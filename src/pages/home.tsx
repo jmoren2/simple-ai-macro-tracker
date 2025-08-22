@@ -193,26 +193,16 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         return calorieGoal - result.total.calories;
     };
 
-    const addDailyWeight = async (weight: number, date?: string) => {
-        const res = await fetch(`/api/weights`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ weight, date }),
-        });
-        if (!res.ok) throw new Error("Failed to add weight");
-        return;
-    }
-
-    const updateDailyWeight = async (date: string, weight: number) => {
-        const res = await fetch(`/api/weights/${date}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ weight }),
-        });
-        if (!res.ok) throw new Error("Failed to update weight");
-        return;
+    const postDailyWeight = async (weight: number, date?: string) => {
+        try {
+            await apiFetch(`/weight`, {
+                method: "POST",
+                body: JSON.stringify({ weight, date }),
+            });
+        } catch (error) {
+            console.error('Error posting daily weight:', error);
+            return null;
+        }
     }
 
     return (
@@ -264,8 +254,8 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                                 title: "Weight Tracker",
                                 content: <WeightTracker
                                     data={weights}
-                                    addDailyWeight={addDailyWeight}
-                                    updateDailyWeight={updateDailyWeight}
+                                    addDailyWeight={postDailyWeight}
+                                    updateDailyWeight={postDailyWeight}
                                     initialRange="7d"   // '7d' | '30d' | '365d' | 'all'
                                     unitLabel="lb"       // or "kg"
                                 />

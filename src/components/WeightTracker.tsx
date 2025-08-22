@@ -14,7 +14,7 @@ import {
 export type WeightTrackerProps = {
     data: WeightLog[];
     addDailyWeight: (weight: number, date?: string) => Promise<void> | void;
-    updateDailyWeight: (date: string, weight: number) => Promise<void> | void;
+    updateDailyWeight: (weight: number, date?: string) => Promise<void> | void;
     initialRange?: "7d" | "30d" | "365d" | "all";
     /** Optional: label to show next to the weight unit, e.g. "lb" or "kg" */
     unitLabel?: string;
@@ -110,7 +110,7 @@ export default function WeightTracker({
         if (isEditingToday && todayEntry) {
             // Update existing
             try {
-                await Promise.resolve(updateDailyWeight(todayEntry.date as string, numeric));
+                await Promise.resolve(updateDailyWeight(numeric, todayEntry.date as string));
                 setLocalData((prev) =>
                     prev.map((e) => (e.date === todayKey ? { ...e, weight: numeric, date: todayKey } : e))
                 );

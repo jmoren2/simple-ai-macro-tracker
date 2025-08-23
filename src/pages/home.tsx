@@ -195,7 +195,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
 
     const postDailyWeight = async (weight: number, date?: string) => {
         try {
-            await apiFetch(`/weight`, {
+            await apiFetch(`${apiUrl}/weight`, {
                 method: "POST",
                 body: JSON.stringify({ weight, date }),
             });

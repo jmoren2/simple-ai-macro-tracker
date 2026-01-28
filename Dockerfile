@@ -2,13 +2,13 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install necessary build tools
-RUN apk add --no-cache git python3 make g++ sqlite-dev
+RUN apk add --no-cache git python3 make g++
 
 # Copy package files
 COPY package.json package-lock.json ./
 
 # Force native rebuild
-RUN npm install --ignore-scripts && npm rebuild better-sqlite3
+RUN npm install
 
 # Copy remaining app files
 COPY . .

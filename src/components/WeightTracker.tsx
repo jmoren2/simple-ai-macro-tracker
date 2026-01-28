@@ -11,6 +11,7 @@ import {
     YAxis,
 } from "recharts";
 
+export type WeightTrackerRange = "7d" | "30d" | "365d" | "all";
 export type WeightTrackerProps = {
     data: WeightLog[];
     addDailyWeight: (weight: number, date?: string) => Promise<void> | void;
@@ -20,6 +21,7 @@ export type WeightTrackerProps = {
     unitLabel?: string;
     /** Optional: Tailwind className passthrough */
     className?: string;
+    onRangeChange?: (range: WeightTrackerRange) => void;
 };
 
 const RANGE_TO_DAYS: Record<NonNullable<WeightTrackerProps["initialRange"]>, number> = {
@@ -55,6 +57,7 @@ export default function WeightTracker({
     initialRange = "30d",
     unitLabel = "lb",
     className,
+    onRangeChange,
 }: WeightTrackerProps) {
     const [localData, setLocalData] = useState<WeightLog[]>(() => data ?? []);
     useEffect(() => {
@@ -91,14 +94,7 @@ export default function WeightTracker({
     }, [todayEntry]);
 
     // Range filtering
-    const filtered = useMemo(() => {
-        const days = RANGE_TO_DAYS[range];
-        if (!Number.isFinite(days)) return localData;
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - (days - 1)); // include today as day 1
-        const cutoffKey = toDateKey(cutoff);
-        return localData.filter((e) => e.date >= cutoffKey);
-    }, [localData, range]);
+    const filtered = useMemo(() => localData, [localData]);
 
     // Derived stats
     const latestLabel = todayEntry ? `${todayEntry.weight} ${unitLabel}` : "--";
@@ -173,7 +169,11 @@ export default function WeightTracker({
                 {(["7d", "30d", "365d", "all"] as const).map((key) => (
                     <button
                         key={key}
-                        onClick={() => setRange(key)}
+                        onClick={() => {
+                            setRange(key);
+                            onRangeChange?.(key);
+                        }}
+
                         className={`px-3 py-1.5 rounded-xl text-sm border ${range === key
                             ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-transparent"
                             : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"

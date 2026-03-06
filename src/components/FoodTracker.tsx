@@ -1,7 +1,7 @@
-import { FoodLog } from "@/types/db/FoodLog";
-import Link from "next/link";
-import { MdOutlineCancel } from "react-icons/md";
-import MacroPieChart from "./MacroPieChart";
+import { FoodLog } from '@/types/db/FoodLog';
+import Link from 'next/link';
+import { MdOutlineCancel } from 'react-icons/md';
+import MacroPieChart from './MacroPieChart';
 
 type FoodTrackerProps = {
     name: string;
@@ -98,7 +98,7 @@ export default function FoodTracker({
                 {/* Add button */}
                 <button
                     className="px-4 py-2 rounded text-white rounded-xl"
-                    style={{ backgroundColor: "#f97316" }}
+                    style={{ backgroundColor: '#f97316' }}
                     onClick={addItem}
                 >
                     Add
@@ -122,9 +122,9 @@ export default function FoodTracker({
                         >
                             <span>{item.name}</span>
                             <span className="flex items-center gap-2">
-                                {typeof item.calories === "number" && !isNaN(item.calories)
+                                {typeof item.calories === 'number' && !isNaN(item.calories)
                                     ? `${item.calories} cal`
-                                    : "unknown"}
+                                    : 'unknown'}
 
                                 {!isAlreadySaved && (
                                     <button
@@ -148,11 +148,11 @@ export default function FoodTracker({
             <div className="flex justify-center">
                 <button
                     className="w-1/4 min-w-[180px] py-2 rounded text-white disabled:opacity-50"
-                    style={{ backgroundColor: "var(--color-green-600)" }}
+                    style={{ backgroundColor: 'var(--color-green-600)' }}
                     onClick={analyzeItems}
                     disabled={items.length === 0 || loading || result !== null}
                 >
-                    {loading ? "Analyzing...🤖" : "Analyze Food with AI"}
+                    {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
                 </button>
             </div>
 
@@ -173,12 +173,10 @@ export default function FoodTracker({
                             🔥 Calories: <span className="font-bold">{result.total.calories}</span>
                         </li>
                         <li>
-                            🍗 Protein:{" "}
-                            <span className="font-bold">{result.total.protein}g</span>
+                            🍗 Protein: <span className="font-bold">{result.total.protein}g</span>
                         </li>
                         <li>
-                            🍞 Carbs:{" "}
-                            <span className="font-bold">{result.total.carbs}g</span>
+                            🍞 Carbs: <span className="font-bold">{result.total.carbs}g</span>
                         </li>
                         <li>
                             🥑 Fat: <span className="font-bold">{result.total.fat}g</span>
@@ -194,7 +192,8 @@ export default function FoodTracker({
                                     {remaining > 0 ? (
                                         <div>
                                             <p>
-                                                ✅ You have <strong>{remaining} cal</strong> remaining.
+                                                ✅ You have <strong>{remaining} cal</strong>{' '}
+                                                remaining.
                                             </p>
                                             <MacroPieChart
                                                 data={{
@@ -206,8 +205,8 @@ export default function FoodTracker({
                                         </div>
                                     ) : remaining < 0 ? (
                                         <p>
-                                            ⚠️ Youve gone{" "}
-                                            <strong>{Math.abs(remaining)} cal</strong> over your goal.
+                                            ⚠️ Youve gone <strong>{Math.abs(remaining)} cal</strong>{' '}
+                                            over your goal.
                                         </p>
                                     ) : (
                                         <p>🎉 Youve hit your calorie goal exactly!</p>

@@ -1,6 +1,6 @@
-import { FoodLog } from "@/types/db/FoodLog";
-import { apiFetch } from "@/utils/api";
-import { useEffect, useState } from "react";
+import { FoodLog } from '@/types/db/FoodLog';
+import { apiFetch } from '@/utils/api';
+import { useEffect, useState } from 'react';
 
 export function useFoodLogsByDay(apiUrl: string) {
     const [logsByDate, setLogsByDate] = useState<Record<string, FoodLog[]>>({});
@@ -10,8 +10,8 @@ export function useFoodLogsByDay(apiUrl: string) {
     const fetchLogs = async (cursor?: string) => {
         setLoading(true);
         const params = new URLSearchParams();
-        if (cursor) params.set("cursor", cursor);
-        params.set("limit", "7"); // 7 days at a time
+        if (cursor) params.set('cursor', cursor);
+        params.set('limit', '7'); // 7 days at a time
 
         const res = await apiFetch(`${apiUrl}/food/logsByDay?${params}`);
         const json = (await res.json()) as {
@@ -28,5 +28,10 @@ export function useFoodLogsByDay(apiUrl: string) {
         fetchLogs();
     }, [apiUrl]);
 
-    return { logsByDate, loading, fetchMore: () => nextCursor && fetchLogs(nextCursor), hasMore: !!nextCursor };
+    return {
+        logsByDate,
+        loading,
+        fetchMore: () => nextCursor && fetchLogs(nextCursor),
+        hasMore: !!nextCursor,
+    };
 }

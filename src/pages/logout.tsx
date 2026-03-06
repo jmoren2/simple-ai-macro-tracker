@@ -10,31 +10,31 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 export default function Logout({ apiUrl }: { apiUrl: string }) {
-  const router = useRouter();
+    const router = useRouter();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        await apiFetch(`${apiUrl}/auth/logout`, {
-          method: 'POST',
-        });
-      } catch (e) {
-        // ignore
-      } finally {
-        router.replace('/'); // go home either way
-      }
-    })();
-  }, [router, apiUrl]);
+    useEffect(() => {
+        (async () => {
+            try {
+                await apiFetch(`${apiUrl}/auth/logout`, {
+                    method: 'POST',
+                });
+            } catch (e) {
+                // ignore
+            } finally {
+                router.replace('/'); // go home either way
+            }
+        })();
+    }, [router, apiUrl]);
 
-  return null;
+    return null;
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const apiUrl = process.env.SHTAI_API_URL!;
-  console.log('Logging out user...');
-  return {
-    props: { apiUrl }, // Pass the API URL
-  };
+    const apiUrl = process.env.SHTAI_API_URL!;
+    console.log('Logging out user...');
+    return {
+        props: { apiUrl }, // Pass the API URL
+    };
 };
 
 // export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {

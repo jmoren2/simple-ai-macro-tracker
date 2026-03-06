@@ -1,6 +1,6 @@
-import React from "react";
-import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
-import "react-tabs/style/react-tabs.css"; // You can remove default styles if using Tailwind only
+import React from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css'; // You can remove default styles if using Tailwind only
 
 type ThemedTabsProps = {
     tabs: { title: string; content: React.ReactNode }[];
@@ -36,11 +36,7 @@ export default function ThemedTabs({ tabs }: ThemedTabsProps) {
             </TabList>
 
             {tabs.map((tab, i) => (
-                <TabPanel
-                    key={i}
-                    className=""
-                    selectedClassName="block"
-                >
+                <TabPanel key={i} className="" selectedClassName="block">
                     {tab.content}
                 </TabPanel>
             ))}

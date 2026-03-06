@@ -51,34 +51,34 @@ export default function Calendar({ history }: Props) {
                             const entry = history.find((e) => e.date === key);
 
                             if (entry) {
-                                return (
-                                    <div className="text-xs text-center">
-                                        {entry.total} cal
-                                    </div>
-                                );
+                                return <div className="text-xs text-center">{entry.total} cal</div>;
                             }
 
                             return null;
                         }}
-
                     />
                 </div>
 
                 <div className="text-sm mt-4 text-center text-gray-300">
-                    <p><span className="dot under" /> Under goal</p>
-                    <p><span className="dot exact" /> Goal met</p>
-                    <p><span className="dot over" /> Over goal</p>
+                    <p>
+                        <span className="dot under" /> Under goal
+                    </p>
+                    <p>
+                        <span className="dot exact" /> Goal met
+                    </p>
+                    <p>
+                        <span className="dot over" /> Over goal
+                    </p>
                 </div>
             </div>
         </div>
     );
 }
 
-
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const apiUrl = process.env.SHTAI_API_URL;
     const meRes = await apiFetch(`${apiUrl}/user/me`, {
-        headers: { cookie: req.headers.cookie ?? '' }
+        headers: { cookie: req.headers.cookie ?? '' },
     });
 
     if (meRes.status !== 200) {
@@ -86,17 +86,19 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     }
 
     try {
-        const user = await meRes.json() as User | null;
+        const user = (await meRes.json()) as User | null;
         if (!user) {
             console.log('User not found');
             return { redirect: { destination: '/', permanent: false } };
         }
 
         const apiUrl = process.env.SHTAI_API_URL!;
-        const data = await (await apiFetch(`${apiUrl}/food/calendar`, {
-            method: 'GET',
-            headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as { history: { date: string; total: number }[] };
+        const data = (await (
+            await apiFetch(`${apiUrl}/food/calendar`, {
+                method: 'GET',
+                headers: { cookie: req.headers.cookie ?? '' },
+            })
+        ).json()) as { history: { date: string; total: number }[] };
 
         const result = data.history.map((entry) => ({
             date: entry.date,

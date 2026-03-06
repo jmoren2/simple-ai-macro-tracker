@@ -9,7 +9,7 @@ import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { WeightLog } from '@/types/db/WeightLog';
 import { apiFetch } from '@/utils/api';
-import { clearLocalStorageItems, formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
+import { formatPSTDate, getPSTDateString, upperCaseFirstLetter } from '@/utils/utils';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 
@@ -44,7 +44,7 @@ type Props = {
     apiUrl: string;
 };
 
-function getItemKey(item: FoodItem & { timestamp?: string; }) {
+function getItemKey(item: FoodItem & { timestamp?: string }) {
     return `${item.name}|${item.calories}|${item.timestamp}`;
 }
 
@@ -52,19 +52,21 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
-    const [items, setItems] = useState<(FoodLog & { timestamp?: string; })[]>([]);
+    const [items, setItems] = useState<(FoodLog & { timestamp?: string })[]>([]);
     const [name, setName] = useState('');
     const [calories, setCalories] = useState('');
     const [result, setResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
-    const [alreadySavedToday, setAlreadySavedToday] = useState<(FoodLog & { timestamp?: string; })[]>([]);
+    const [alreadySavedToday, setAlreadySavedToday] = useState<
+        (FoodLog & { timestamp?: string })[]
+    >([]);
     const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
     const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
     const [foodInputFocused, setFoodInputFocused] = useState(false);
     const [weight, setWeight] = useState<WeightLog[]>(weights);
-    const [range, setRange] = useState<WeightTrackerRange>("7d");
+    const [range, setRange] = useState<WeightTrackerRange>('7d');
 
     useEffect(() => {
         const fetchFoodNames = async () => {
@@ -89,7 +91,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
-            const data = await res.json() as { logs: FoodLog[]; };
+            const data = (await res.json()) as { logs: FoodLog[] };
 
             if (data?.logs?.length > 0) {
                 const logsWithTimestamps = data.logs.map((item) => ({
@@ -120,7 +122,6 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         localStorage.setItem(localStorageItemsKey, JSON.stringify(items));
     }, [items, localStorageItemsKey]);
 
-
     useEffect(() => {
         async function fetchData() {
             const res = await apiFetch(`${apiUrl}/weight/logs?range=${range}`, {
@@ -128,7 +129,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                 headers: { 'Content-Type': 'application/json' },
             });
 
-            const data = await res.json() as { data: WeightLog[]; };
+            const data = (await res.json()) as { data: WeightLog[] };
             setWeight(data.data);
         }
 
@@ -160,7 +161,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
             name,
             calories: value,
             timestamp: formatPSTDate(), // ensures uniqueness for same name on same day, using current PST time
-        } as FoodLog & { timestamp?: string; };
+        } as FoodLog & { timestamp?: string };
         setItems([newItem, ...items]);
 
         setName('');
@@ -176,9 +177,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
 
         // 2. Filter out items that are already saved
         const newItems = items.filter(
-            (item) => !savedItems.some(
-                (saved) => getItemKey(saved) === getItemKey(item)
-            )
+            (item) => !savedItems.some((saved) => getItemKey(saved) === getItemKey(item))
         );
 
         // 3. Analyze all items regardless
@@ -201,8 +200,8 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
             // 5. Update local saved items
             const updatedSaved = [...savedItems, ...newItems];
             localStorage.setItem(localStorageItemsKey, JSON.stringify(updatedSaved));
+            setAlreadySavedToday(updatedSaved);
         }
-        clearLocalStorageItems(user.email);
     };
 
     const caloriesRemaining = () => {
@@ -213,7 +212,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const postDailyWeight = async (weight: number, date?: string) => {
         try {
             await apiFetch(`${apiUrl}/weight`, {
-                method: "POST",
+                method: 'POST',
                 body: JSON.stringify({ weight, date }),
             });
         } catch (error) {
@@ -222,9 +221,15 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     };
 
     return (
-        <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+        <div
+            className="min-h-screen p-6"
+            style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+        >
             <Navbar />
-            <div className="max-w-2xl mx-auto p-6 rounded-xl shadow-xl mt-6" style={{ backgroundColor: '#2c2c2c' }}>
+            <div
+                className="max-w-2xl mx-auto p-6 rounded-xl shadow-xl mt-6"
+                style={{ backgroundColor: '#2c2c2c' }}
+            >
                 <h1 className="text-2xl font-bold mb-2 text-center">🧠 Simple AI Macro Tracker</h1>
                 <div className="text-center mb-2">
                     <p>Welcome, {upperCaseFirstLetter(user?.name) || user?.email}!</p>
@@ -244,38 +249,42 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                     <ThemedTabs
                         tabs={[
                             {
-                                title: "Food Tracker",
-                                content: <FoodTracker
-                                    name={name}
-                                    setName={setName}
-                                    calories={calories}
-                                    setCalories={setCalories}
-                                    addItem={addItem}
-                                    items={items}
-                                    setItems={setItems}
-                                    alreadySavedToday={alreadySavedToday}
-                                    analyzeItems={analyzeItems}
-                                    loading={loading}
-                                    result={result}
-                                    caloriesRemaining={caloriesRemaining}
-                                    suggestions={suggestions}
-                                    setFilteredSuggestions={setFilteredSuggestions}
-                                    filteredSuggestions={filteredSuggestions}
-                                    user={user}
-                                    foodInputFocused={foodInputFocused}
-                                    setFoodInputFocused={setFoodInputFocused}
-                                />
+                                title: 'Food Tracker',
+                                content: (
+                                    <FoodTracker
+                                        name={name}
+                                        setName={setName}
+                                        calories={calories}
+                                        setCalories={setCalories}
+                                        addItem={addItem}
+                                        items={items}
+                                        setItems={setItems}
+                                        alreadySavedToday={alreadySavedToday}
+                                        analyzeItems={analyzeItems}
+                                        loading={loading}
+                                        result={result}
+                                        caloriesRemaining={caloriesRemaining}
+                                        suggestions={suggestions}
+                                        setFilteredSuggestions={setFilteredSuggestions}
+                                        filteredSuggestions={filteredSuggestions}
+                                        user={user}
+                                        foodInputFocused={foodInputFocused}
+                                        setFoodInputFocused={setFoodInputFocused}
+                                    />
+                                ),
                             },
                             {
-                                title: "Weight Tracker",
-                                content: <WeightTracker
-                                    data={weight}
-                                    addDailyWeight={postDailyWeight}
-                                    updateDailyWeight={postDailyWeight}
-                                    initialRange={range}   // '7d' | '30d' | '365d' | 'all'
-                                    unitLabel="lb"       // or "kg"
-                                    onRangeChange={setRange}
-                                />
+                                title: 'Weight Tracker',
+                                content: (
+                                    <WeightTracker
+                                        data={weight}
+                                        addDailyWeight={postDailyWeight}
+                                        updateDailyWeight={postDailyWeight}
+                                        initialRange={range} // '7d' | '30d' | '365d' | 'all'
+                                        unitLabel="lb" // or "kg"
+                                        onRangeChange={setRange}
+                                    />
+                                ),
                             },
                             // {
                             //     title: "Water",
@@ -287,20 +296,10 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                             // }
                         ]}
                     />
-
-
                 )}
-
             </div>
         </div>
     );
-}
-
-function toDateKey(d = new Date()) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
@@ -315,7 +314,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     }
 
     try {
-        const user = await meRes.json() as User;
+        const user = (await meRes.json()) as User;
         if (!user) {
             console.error('User not found');
             return { redirect: { destination: '/', permanent: false } };
@@ -324,17 +323,35 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         // Get today's date in PST (America/Los_Angeles)
         const today = getPSTDateString(new Date());
         const url = process.env.SHTAI_API_URL!;
-        const dailyTotals = await (await apiFetch(`${url}/food/dailyTotals?date=${today}`, {
-            method: 'GET',
-            headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as { dailyTotals: { calories: number | null, protein: number | null, carbs: number | null, fat: number | null; }; };
+        const dailyTotals = (await (
+            await apiFetch(`${url}/food/dailyTotals?date=${today}`, {
+                method: 'GET',
+                headers: { cookie: req.headers.cookie ?? '' },
+            })
+        ).json()) as {
+            dailyTotals: {
+                calories: number | null;
+                protein: number | null;
+                carbs: number | null;
+                fat: number | null;
+            };
+        };
 
-        const weights = await (await apiFetch(`${url}/weight/logs?range=7d`, {
-            method: 'GET',
-            headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as { data: WeightLog[]; };
+        const weights = (await (
+            await apiFetch(`${url}/weight/logs?range=7d`, {
+                method: 'GET',
+                headers: { cookie: req.headers.cookie ?? '' },
+            })
+        ).json()) as { data: WeightLog[] };
 
-        return { props: { user, dailyTotals: dailyTotals.dailyTotals, weights: weights.data, apiUrl: process.env.SHTAI_API_URL, } };
+        return {
+            props: {
+                user,
+                dailyTotals: dailyTotals.dailyTotals,
+                weights: weights.data,
+                apiUrl: process.env.SHTAI_API_URL,
+            },
+        };
     } catch (error) {
         console.error('Failed to fetch user data:', error);
         return { redirect: { destination: '/', permanent: false } };

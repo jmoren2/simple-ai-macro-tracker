@@ -1,3 +1,4 @@
+import Navbar from '@/components/Navbar';
 import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
 import { GetServerSideProps } from 'next';
@@ -70,114 +71,117 @@ export default function Index(props: { apiUrl: string }) {
 
     return (
         <main
-            className="min-h-screen flex flex-col items-center justify-center p-4"
+            className="min-h-screen flex flex-col"
             style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
         >
-            <div
-                className="shadow-lg rounded-lg p-6 w-full max-w-md text-center"
-                style={{ backgroundColor: '#2c2c2c' }} // brand.surface
-            >
-                <div className="flex justify-center mb-4">
-                    <Image src="/logo.svg" alt="Macro-AI" width={180} height={48} priority />
+            <Navbar loggedOut />
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div
+                    className="shadow-lg rounded-lg p-6 w-full max-w-md text-center"
+                    style={{ backgroundColor: '#2c2c2c' }}
+                >
+                    <div className="flex justify-center mb-4">
+                        <Image src="/logo.svg" alt="Macro-AI" width={180} height={48} priority />
+                    </div>
+                    <p className="mb-4">A simple AI macro tracker</p>
+
+                    {!showForm ? (
+                        <>
+                            <button
+                                onClick={() => setShowForm('create')}
+                                className="w-full px-6 py-2 rounded mb-2"
+                                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                            >
+                                Create Account
+                            </button>
+                            <button
+                                onClick={() => setShowForm('login')}
+                                className="w-full px-6 py-2 rounded"
+                                style={{ backgroundColor: '#444', color: 'white' }}
+                            >
+                                Login
+                            </button>
+                        </>
+                    ) : showForm === 'create' ? (
+                        <>
+                            <div className="flex flex-col gap-3 mb-4">
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    className="border px-4 py-2 rounded bg-black text-white"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Name"
+                                    className="border px-4 py-2 rounded bg-black text-white"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    className="border px-4 py-2 rounded bg-black text-white"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    onClick={handleCreateUser}
+                                    disabled={loading || !email || !password}
+                                    className="px-6 py-2 rounded disabled:opacity-50"
+                                    style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                                >
+                                    {loading ? 'Creating...' : 'Create Account'}
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setShowForm(false)}
+                                className="text-sm text-gray-400 underline"
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="flex flex-col gap-3 mb-4">
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    className="border px-4 py-2 rounded bg-black text-white"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    className="border px-4 py-2 rounded bg-black text-white"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    onClick={handleLogin}
+                                    disabled={loading || !email || !password}
+                                    className="px-6 py-2 rounded disabled:opacity-50"
+                                    style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                                >
+                                    {loading ? 'Logging in...' : 'Login'}
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setShowForm(false)}
+                                className="text-sm text-gray-400 underline"
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    )}
+
+                    {message && <p className="mt-4 text-green-400">{message}</p>}
+                    {error && <p className="mt-4 text-red-500">{error}</p>}
                 </div>
-                <p className="mb-4">A simple AI macro tracker</p>
-
-                {!showForm ? (
-                    <>
-                        <button
-                            onClick={() => setShowForm('create')}
-                            className="w-full px-6 py-2 rounded mb-2"
-                            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                        >
-                            Create Account
-                        </button>
-                        <button
-                            onClick={() => setShowForm('login')}
-                            className="w-full px-6 py-2 rounded"
-                            style={{ backgroundColor: '#444', color: 'white' }}
-                        >
-                            Login
-                        </button>
-                    </>
-                ) : showForm === 'create' ? (
-                    <>
-                        <div className="flex flex-col gap-3 mb-4">
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                className="border px-4 py-2 rounded bg-black text-white"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Name"
-                                className="border px-4 py-2 rounded bg-black text-white"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                className="border px-4 py-2 rounded bg-black text-white"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                            <button
-                                onClick={handleCreateUser}
-                                disabled={loading || !email || !password}
-                                className="px-6 py-2 rounded disabled:opacity-50"
-                                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                            >
-                                {loading ? 'Creating...' : 'Create Account'}
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={() => setShowForm(false)}
-                            className="text-sm text-gray-400 underline"
-                        >
-                            Cancel
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <div className="flex flex-col gap-3 mb-4">
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                className="border px-4 py-2 rounded bg-black text-white"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                className="border px-4 py-2 rounded bg-black text-white"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                            <button
-                                onClick={handleLogin}
-                                disabled={loading || !email || !password}
-                                className="px-6 py-2 rounded disabled:opacity-50"
-                                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                            >
-                                {loading ? 'Logging in...' : 'Login'}
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={() => setShowForm(false)}
-                            className="text-sm text-gray-400 underline"
-                        >
-                            Cancel
-                        </button>
-                    </>
-                )}
-
-                {message && <p className="mt-4 text-green-400">{message}</p>}
-                {error && <p className="mt-4 text-red-500">{error}</p>}
             </div>
         </main>
     );

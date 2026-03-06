@@ -5,7 +5,7 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-type Message = { role: 'user' | 'assistant'; content: string; };
+type Message = { role: 'user' | 'assistant'; content: string };
 
 type AssistantResponse = {
     message: string;

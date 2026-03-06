@@ -189,7 +189,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         headers: { cookie: req.headers.cookie ?? '' },
     });
     if (res.status !== 200) {
-        return { props: { apiUrl } };
+        return { props: { apiUrl: '/api/backend' } };
     }
 
     const user = (await res.json()) as User | null;

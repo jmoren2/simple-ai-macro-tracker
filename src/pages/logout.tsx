@@ -33,7 +33,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     const apiUrl = process.env.SHTAI_API_URL!;
     console.log('Logging out user...');
     return {
-        props: { apiUrl }, // Pass the API URL
+        props: { apiUrl: '/api/backend' }, // Pass the API URL
     };
 };
 

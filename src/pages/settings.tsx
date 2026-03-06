@@ -104,7 +104,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
             console.log('User not found');
             return { redirect: { destination: '/', permanent: false } };
         }
-        return { props: { user, apiUrl } };
+        return { props: { user, apiUrl: '/api/backend' } };
     } catch (err) {
         console.log(err);
         return { redirect: { destination: '/', permanent: false } };

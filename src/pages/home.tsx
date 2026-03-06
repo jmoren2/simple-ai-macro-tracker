@@ -349,7 +349,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
                 user,
                 dailyTotals: dailyTotals.dailyTotals,
                 weights: weights.data,
-                apiUrl: process.env.SHTAI_API_URL,
+                apiUrl: '/api/backend',
             },
         };
     } catch (error) {

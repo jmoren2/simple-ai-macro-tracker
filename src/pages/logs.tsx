@@ -132,7 +132,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
             return { redirect: { destination: '/', permanent: false } };
         }
 
-        return { props: { user, calorieGoal: user.calorie_goal, apiUrl } };
+        return { props: { user, calorieGoal: user.calorie_goal, apiUrl: '/api/backend' } };
     } catch (err) {
         console.log(err);
 

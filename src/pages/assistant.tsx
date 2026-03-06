@@ -271,7 +271,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     try {
         const user = (await meRes.json()) as User | null;
         if (!user) return { redirect: { destination: '/', permanent: false } };
-        return { props: { user, apiUrl } };
+        return { props: { user, apiUrl: '/api/backend' } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };
     }

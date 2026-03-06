@@ -36,6 +36,8 @@ export default function App({ Component, pageProps }: AppProps) {
     return (
         <>
             <Head>
+                <title>Macro-AI</title>
+                <link rel="icon" href="/logo.svg" type="image/svg+xml" />
                 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
                 <link rel="manifest" href="/manifest.json" />
                 <meta name="theme-color" content="#1f1f1f" />

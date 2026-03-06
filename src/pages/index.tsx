@@ -1,6 +1,7 @@
 import { User } from '@/types/db/User';
 import { apiFetch } from '@/utils/api';
 import { GetServerSideProps } from 'next';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
@@ -76,7 +77,9 @@ export default function Index(props: { apiUrl: string }) {
                 className="shadow-lg rounded-lg p-6 w-full max-w-md text-center"
                 style={{ backgroundColor: '#2c2c2c' }} // brand.surface
             >
-                <h1 className="text-2xl font-bold mb-4">Macro AI</h1>
+                <div className="flex justify-center mb-4">
+                    <Image src="/logo.svg" alt="Macro-AI" width={180} height={48} priority />
+                </div>
                 <p className="mb-4">A simple AI macro tracker</p>
 
                 {!showForm ? (

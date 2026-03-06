@@ -4,7 +4,7 @@ import DailyGoal from '@/components/DailyGoal';
 import FoodTracker from '@/components/FoodTracker';
 import Navbar from '@/components/Navbar';
 import ThemedTabs from '@/components/ThemedTabs';
-import WeightTracker from '@/components/WeightTracker';
+import WeightTracker, { WeightTrackerRange } from '@/components/WeightTracker';
 import { FoodLog } from '@/types/db/FoodLog';
 import { User } from '@/types/db/User';
 import { WeightLog } from '@/types/db/WeightLog';
@@ -44,7 +44,7 @@ type Props = {
     apiUrl: string;
 };
 
-function getItemKey(item: FoodItem & { timestamp?: string }) {
+function getItemKey(item: FoodItem & { timestamp?: string; }) {
     return `${item.name}|${item.calories}|${item.timestamp}`;
 }
 
@@ -52,17 +52,19 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
-    const [items, setItems] = useState<(FoodLog & { timestamp?: string })[]>([]);
+    const [items, setItems] = useState<(FoodLog & { timestamp?: string; })[]>([]);
     const [name, setName] = useState('');
     const [calories, setCalories] = useState('');
     const [result, setResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
-    const [alreadySavedToday, setAlreadySavedToday] = useState<(FoodLog & { timestamp?: string })[]>([]);
+    const [alreadySavedToday, setAlreadySavedToday] = useState<(FoodLog & { timestamp?: string; })[]>([]);
     const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
     const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
     const [foodInputFocused, setFoodInputFocused] = useState(false);
+    const [weight, setWeight] = useState<WeightLog[]>(weights);
+    const [range, setRange] = useState<WeightTrackerRange>("7d");
 
     useEffect(() => {
         const fetchFoodNames = async () => {
@@ -87,7 +89,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
-            const data = await res.json() as { logs: FoodLog[] };
+            const data = await res.json() as { logs: FoodLog[]; };
 
             if (data?.logs?.length > 0) {
                 const logsWithTimestamps = data.logs.map((item) => ({
@@ -118,6 +120,21 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         localStorage.setItem(localStorageItemsKey, JSON.stringify(items));
     }, [items, localStorageItemsKey]);
 
+
+    useEffect(() => {
+        async function fetchData() {
+            const res = await apiFetch(`${apiUrl}/weight/logs?range=${range}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const data = await res.json() as { data: WeightLog[]; };
+            setWeight(data.data);
+        }
+
+        fetchData();
+    }, [range, apiUrl]);
+
     const saveGoal = async () => {
         const res = await apiFetch(`${apiUrl}/user/me`, {
             method: 'PUT',
@@ -143,7 +160,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
             name,
             calories: value,
             timestamp: formatPSTDate(), // ensures uniqueness for same name on same day, using current PST time
-        } as FoodLog & { timestamp?: string };
+        } as FoodLog & { timestamp?: string; };
         setItems([newItem, ...items]);
 
         setName('');
@@ -202,7 +219,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         } catch (error) {
             console.error('Error posting daily weight:', error);
         }
-    }
+    };
 
     return (
         <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
@@ -252,11 +269,12 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                             {
                                 title: "Weight Tracker",
                                 content: <WeightTracker
-                                    data={weights}
+                                    data={weight}
                                     addDailyWeight={postDailyWeight}
                                     updateDailyWeight={postDailyWeight}
-                                    initialRange="7d"   // '7d' | '30d' | '365d' | 'all'
+                                    initialRange={range}   // '7d' | '30d' | '365d' | 'all'
                                     unitLabel="lb"       // or "kg"
+                                    onRangeChange={setRange}
                                 />
                             },
                             // {
@@ -309,12 +327,12 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         const dailyTotals = await (await apiFetch(`${url}/food/dailyTotals?date=${today}`, {
             method: 'GET',
             headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as { dailyTotals: { calories: number | null, protein: number | null, carbs: number | null, fat: number | null } };
+        })).json() as { dailyTotals: { calories: number | null, protein: number | null, carbs: number | null, fat: number | null; }; };
 
         const weights = await (await apiFetch(`${url}/weight/logs?range=7d`, {
             method: 'GET',
             headers: { cookie: req.headers.cookie ?? '' }
-        })).json() as { data: WeightLog[] };
+        })).json() as { data: WeightLog[]; };
 
         return { props: { user, dailyTotals: dailyTotals.dailyTotals, weights: weights.data, apiUrl: process.env.SHTAI_API_URL, } };
     } catch (error) {

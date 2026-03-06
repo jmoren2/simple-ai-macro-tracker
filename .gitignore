@@ -77,3 +77,6 @@ yarn-error.log*
 next-env.d.ts
 
 data.db
+
+# local dev docker overrides
+docker-compose.override.yml

@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
-export default function Index(props: { apiUrl: string }) {
+export default function Index(props: { apiUrl: string; }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState<'create' | 'login' | false>(false);
   const [email, setEmail] = useState('');

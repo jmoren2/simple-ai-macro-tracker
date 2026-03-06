@@ -5,7 +5,7 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-type Message = { role: 'user' | 'assistant'; content: string };
+type Message = { role: 'user' | 'assistant'; content: string; };
 
 type AssistantResponse = {
     message: string;
@@ -271,6 +271,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     try {
         const user = (await meRes.json()) as User | null;
         if (!user) return { redirect: { destination: '/', permanent: false } };
+        if (!user.isPremium) {
+            return { redirect: { destination: '/', permanent: false } };
+        }
         return { props: { user, apiUrl: '/api/backend' } };
     } catch {
         return { redirect: { destination: '/', permanent: false } };

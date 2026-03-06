@@ -4,13 +4,13 @@ import { apiFetch } from '@/utils/api';
 import { GetServerSideProps } from 'next';
 
 type Props = {
-    user: User;
+    user: User | null;
 };
 
 export default function About({ user }: Props) {
     return (
         <div className="min-h-screen bg-brand-bg text-brand-text p-4">
-            <Navbar />
+            <Navbar loggedOut={!user} />
             <div
                 className="max-w-2xl mx-auto bg-brand-surface rounded-xl p-4 shadow-md mt-6"
                 style={{ backgroundColor: '#2c2c2c' }}
@@ -23,21 +23,14 @@ export default function About({ user }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     const apiUrl = process.env.SHTAI_API_URL;
-    const meRes = await apiFetch(`${apiUrl}/user/me`, {
-        headers: { cookie: req.headers.cookie ?? '' },
-    });
-    if (meRes.status !== 200) {
-        return { redirect: { destination: '/', permanent: false } };
-    }
     try {
+        const meRes = await apiFetch(`${apiUrl}/user/me`, {
+            headers: { cookie: req.headers.cookie ?? '' },
+        });
+        if (meRes.status !== 200) return { props: { user: null } };
         const user = (await meRes.json()) as User | null;
-        if (!user) {
-            return { redirect: { destination: '/', permanent: false } };
-        }
-        return { props: { user } };
-    } catch (err) {
-        console.log(err);
-
-        return { redirect: { destination: '/', permanent: false } };
+        return { props: { user: user ?? null } };
+    } catch {
+        return { props: { user: null } };
     }
 };

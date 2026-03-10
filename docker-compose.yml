@@ -2,11 +2,9 @@ version: "3.8"
 
 services:
   nextjs:
+    image: ghcr.io/jmoren2/simple-ai-macro-tracker:latest
     env_file:
       - .env
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: simple-ai-macro-tracker
     restart: always
     ports:

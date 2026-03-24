@@ -44,7 +44,7 @@ type Props = {
     apiUrl: string;
 };
 
-function getItemKey(item: FoodItem & { timestamp?: string; }) {
+function getItemKey(item: FoodItem & { timestamp?: string }) {
     return `${item.name}|${item.calories}|${item.timestamp}`;
 }
 
@@ -52,13 +52,13 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const [calorieGoal, setCalorieGoal] = useState(user?.calorie_goal || 0);
     const [goalSubmitted, setGoalSubmitted] = useState(calorieGoal > 0);
     const [updatingGoal, setUpdatingGoal] = useState(false);
-    const [items, setItems] = useState<(FoodLog & { timestamp?: string; })[]>([]);
+    const [items, setItems] = useState<(FoodLog & { timestamp?: string })[]>([]);
     const [name, setName] = useState('');
     const [result, setResult] = useState<Result | null>(null);
     const [cachedResult, setCachedResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
     const [alreadySavedToday, setAlreadySavedToday] = useState<
-        (FoodLog & { timestamp?: string; })[]
+        (FoodLog & { timestamp?: string })[]
     >([]);
     const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
     const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
@@ -92,7 +92,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
-            const data = (await res.json()) as { logs: FoodLog[]; };
+            const data = (await res.json()) as { logs: FoodLog[] };
 
             if (data?.logs?.length > 0) {
                 const logsWithTimestamps = data.logs.map((item) => ({
@@ -142,7 +142,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                 headers: { 'Content-Type': 'application/json' },
             });
 
-            const data = (await res.json()) as { data: WeightLog[]; };
+            const data = (await res.json()) as { data: WeightLog[] };
             setWeight(data.data);
         }
 
@@ -171,7 +171,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
             name,
             calories: 'unknown',
             timestamp: formatPSTDate(), // ensures uniqueness for same name on same day, using current PST time
-        } as unknown as FoodLog & { timestamp?: string; };
+        } as unknown as FoodLog & { timestamp?: string };
         setItems([newItem, ...items]);
 
         setName('');
@@ -298,7 +298,8 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                                         hasNewItems={items.some(
                                             (item) =>
                                                 !alreadySavedToday.some(
-                                                    (saved) => getItemKey(saved) === getItemKey(item)
+                                                    (saved) =>
+                                                        getItemKey(saved) === getItemKey(item)
                                                 )
                                         )}
                                         loading={loading}
@@ -384,7 +385,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
                 method: 'GET',
                 headers: { cookie: req.headers.cookie ?? '' },
             })
-        ).json()) as { data: WeightLog[]; };
+        ).json()) as { data: WeightLog[] };
 
         return {
             props: {

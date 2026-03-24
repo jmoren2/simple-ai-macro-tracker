@@ -54,14 +54,15 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const [updatingGoal, setUpdatingGoal] = useState(false);
     const [items, setItems] = useState<(FoodLog & { timestamp?: string })[]>([]);
     const [name, setName] = useState('');
-    const [calories, setCalories] = useState('');
     const [result, setResult] = useState<Result | null>(null);
+    const [cachedResult, setCachedResult] = useState<Result | null>(null);
     const [loading, setLoading] = useState(false);
     const [alreadySavedToday, setAlreadySavedToday] = useState<
         (FoodLog & { timestamp?: string })[]
     >([]);
     const localStorageDateKey = `macro-tracker-saved-date-${user?.email}`;
     const localStorageItemsKey = `macro-tracker-items-${user?.email}`;
+    const localStorageResultKey = `macro-tracker-result-${user?.email}`;
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
     const [foodInputFocused, setFoodInputFocused] = useState(false);
@@ -106,17 +107,29 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         };
 
         if (lastSavedDate !== today) {
-            // New day — clear saved items
+            // New day — clear saved items and result
             localStorage.removeItem(localStorageItemsKey);
+            localStorage.removeItem(localStorageResultKey);
             localStorage.setItem(localStorageDateKey, today);
             hydrateFromDB();
         } else if (!lastSavedItems || lastSavedItems.length === 0) {
             hydrateFromDB();
         } else {
-            setItems(JSON.parse(lastSavedItems));
-            setAlreadySavedToday(JSON.parse(lastSavedItems)); // Also hydrate saved state
+            const parsed = JSON.parse(lastSavedItems);
+            const hasUnknown = parsed.some(
+                (item: FoodLog) => item.calories === 'unknown' || item.calories === null
+            );
+            if (hasUnknown) {
+                hydrateFromDB();
+            } else {
+                setItems(parsed);
+                setAlreadySavedToday(parsed);
+            }
         }
-    }, [localStorageDateKey, localStorageItemsKey, user?.email, apiUrl]);
+
+        const savedResult = localStorage.getItem(localStorageResultKey);
+        if (savedResult) setCachedResult(JSON.parse(savedResult));
+    }, [localStorageDateKey, localStorageItemsKey, localStorageResultKey, user?.email, apiUrl]);
 
     useEffect(() => {
         localStorage.setItem(localStorageItemsKey, JSON.stringify(items));
@@ -154,54 +167,77 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
     const addItem = () => {
         if (!name) return;
 
-        const parsed = parseInt(calories, 10);
-        const value: number | 'unknown' = isNaN(parsed) ? 'unknown' : parsed;
-
         const newItem = {
             name,
-            calories: value,
+            calories: 'unknown',
             timestamp: formatPSTDate(), // ensures uniqueness for same name on same day, using current PST time
-        } as FoodLog & { timestamp?: string };
+        } as unknown as FoodLog & { timestamp?: string };
         setItems([newItem, ...items]);
 
         setName('');
-        setCalories('');
     };
 
     const analyzeItems = async () => {
+        const newItems = items.filter(
+            (item) => !alreadySavedToday.some((saved) => getItemKey(saved) === getItemKey(item))
+        );
+
+        if (newItems.length === 0) return;
+
         setLoading(true);
         setResult(null);
 
-        // 1. Load saved items from localStorage
-        const savedItems = alreadySavedToday;
-
-        // 2. Filter out items that are already saved
-        const newItems = items.filter(
-            (item) => !savedItems.some((saved) => getItemKey(saved) === getItemKey(item))
-        );
-
-        // 3. Analyze all items regardless
         const res = await apiFetch(`${apiUrl}/analyze/calories`, {
             method: 'POST',
-            body: JSON.stringify({ items }),
+            body: JSON.stringify({ items: newItems }),
         });
 
         const data = await res.json();
-        setResult(data);
+
+        const previousTotals = alreadySavedToday.reduce(
+            (acc, item) => ({
+                calories: acc.calories + (typeof item.calories === 'number' ? item.calories : 0),
+                protein: acc.protein + (item.protein || 0),
+                fat: acc.fat + (item.fat || 0),
+                carbs: acc.carbs + (item.carbs || 0),
+            }),
+            { calories: 0, protein: 0, fat: 0, carbs: 0 }
+        );
+
+        const combinedResult = {
+            ...data,
+            total: {
+                calories: previousTotals.calories + data.total.calories,
+                protein: previousTotals.protein + data.total.protein,
+                fat: previousTotals.fat + data.total.fat,
+                carbs: previousTotals.carbs + data.total.carbs,
+            },
+        };
+
+        setResult(combinedResult);
+        setCachedResult(combinedResult);
+        localStorage.setItem(localStorageResultKey, JSON.stringify(combinedResult));
         setLoading(false);
 
-        // 4. Only send new items to DB
-        if (newItems.length > 0) {
-            await apiFetch(`${apiUrl}/food/logs`, {
-                method: 'POST',
-                body: JSON.stringify({ items: newItems, result: data }),
-            });
+        await apiFetch(`${apiUrl}/food/logs`, {
+            method: 'POST',
+            body: JSON.stringify({ items: newItems, result: data }),
+        });
 
-            // 5. Update local saved items
-            const updatedSaved = [...savedItems, ...newItems];
-            localStorage.setItem(localStorageItemsKey, JSON.stringify(updatedSaved));
-            setAlreadySavedToday(updatedSaved);
-        }
+        const enrichedNewItems = newItems.map((item) => ({
+            ...item,
+            ...(data.breakdown?.[item.name] ?? {}),
+        }));
+
+        const updatedItems = items.map((item) => {
+            const enriched = enrichedNewItems.find((ni) => getItemKey(ni) === getItemKey(item));
+            return enriched ?? item;
+        });
+        setItems(updatedItems);
+
+        const updatedSaved = [...alreadySavedToday, ...enrichedNewItems];
+        localStorage.setItem(localStorageItemsKey, JSON.stringify(updatedSaved));
+        setAlreadySavedToday(updatedSaved);
     };
 
     const caloriesRemaining = () => {
@@ -254,15 +290,21 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
                                     <FoodTracker
                                         name={name}
                                         setName={setName}
-                                        calories={calories}
-                                        setCalories={setCalories}
                                         addItem={addItem}
                                         items={items}
                                         setItems={setItems}
                                         alreadySavedToday={alreadySavedToday}
                                         analyzeItems={analyzeItems}
+                                        hasNewItems={items.some(
+                                            (item) =>
+                                                !alreadySavedToday.some(
+                                                    (saved) => getItemKey(saved) === getItemKey(item)
+                                                )
+                                        )}
                                         loading={loading}
                                         result={result}
+                                        cachedResult={cachedResult}
+                                        loadCachedResult={() => setResult(cachedResult)}
                                         caloriesRemaining={caloriesRemaining}
                                         suggestions={suggestions}
                                         setFilteredSuggestions={setFilteredSuggestions}

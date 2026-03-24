@@ -107,9 +107,6 @@ export default function Navbar({ loggedOut = false }: { loggedOut?: boolean }) {
                     <Link href="/calendar" className="hover:text-orange-400">
                         Calendar
                     </Link>
-                    <Link href="/assistant" className="hover:text-orange-400">
-                        Macro Assistant
-                    </Link>
 
                     {/* Dropdown trigger */}
                     <div className="relative">

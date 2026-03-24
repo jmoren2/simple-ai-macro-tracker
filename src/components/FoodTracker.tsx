@@ -6,15 +6,16 @@ import MacroPieChart from './MacroPieChart';
 type FoodTrackerProps = {
     name: string;
     setName: (name: string) => void;
-    calories: string;
-    setCalories: (cal: string) => void;
     addItem: () => void;
     items: (FoodLog & { timestamp?: string })[];
     setItems: (items: (FoodLog & { timestamp?: string })[]) => void;
     alreadySavedToday: (FoodLog & { timestamp?: string })[];
     analyzeItems: () => void;
+    hasNewItems: boolean;
     loading: boolean;
     result: any;
+    cachedResult: any;
+    loadCachedResult: () => void;
     caloriesRemaining: () => number | null;
     suggestions: string[];
     setFilteredSuggestions: (s: string[]) => void;
@@ -27,15 +28,16 @@ type FoodTrackerProps = {
 export default function FoodTracker({
     name,
     setName,
-    calories,
-    setCalories,
     addItem,
     items,
     setItems,
     alreadySavedToday,
     analyzeItems,
+    hasNewItems,
     loading,
     result,
+    cachedResult,
+    loadCachedResult,
     caloriesRemaining,
     suggestions,
     setFilteredSuggestions,
@@ -85,15 +87,6 @@ export default function FoodTracker({
                             </ul>
                         )}
                 </div>
-
-                {/* Calories input */}
-                <input
-                    type="text"
-                    placeholder="Calories"
-                    className="w-32 border px-4 py-2 rounded bg-black text-white rounded-xl"
-                    value={calories}
-                    onChange={(e) => setCalories(e.target.value)}
-                />
 
                 {/* Add button */}
                 <button
@@ -145,15 +138,49 @@ export default function FoodTracker({
             </ul>
 
             {/* Analyze button */}
-            <div className="flex justify-center">
+            <div className="flex justify-center items-center gap-2">
                 <button
                     className="w-1/4 min-w-[180px] py-2 rounded text-white disabled:opacity-50"
                     style={{ backgroundColor: 'var(--color-green-600)' }}
                     onClick={analyzeItems}
-                    disabled={items.length === 0 || loading || result !== null}
+                    disabled={items.length === 0 || !hasNewItems || loading || result !== null}
                 >
-                    {loading ? 'Analyzing...🤖' : 'Analyze Food with AI'}
+                    {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <svg
+                                className="animate-spin h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                />
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                />
+                            </svg>
+                            Analyzing...
+                        </span>
+                    ) : (
+                        'Analyze Food with AI'
+                    )}
                 </button>
+                {cachedResult && !result && (
+                    <button
+                        className="text-xs text-gray-400 hover:text-white underline underline-offset-2 transition-colors"
+                        onClick={loadCachedResult}
+                    >
+                        View last results
+                    </button>
+                )}
             </div>
 
             {/* Analysis results */}

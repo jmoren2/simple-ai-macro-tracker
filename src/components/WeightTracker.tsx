@@ -24,11 +24,18 @@ export type WeightTrackerProps = {
     onRangeChange?: (range: WeightTrackerRange) => void;
 };
 
-const RANGE_TO_DAYS: Record<NonNullable<WeightTrackerProps['initialRange']>, number> = {
+const RANGE_TO_DAYS: Record<WeightTrackerRange, number> = {
     '7d': 7,
     '30d': 30,
     '365d': 365,
     all: Number.POSITIVE_INFINITY,
+};
+
+const RANGE_LABEL: Record<WeightTrackerRange, string> = {
+    '7d': 'last 7 days',
+    '30d': 'last 30 days',
+    '365d': 'last year',
+    all: 'all time',
 };
 
 function toDateKey(d: string | Date) {
@@ -103,6 +110,14 @@ export default function WeightTracker({
         const cutoffKey = toDateKey(cutoff);
         return localData.filter((e) => e.date >= cutoffKey);
     }, [localData, range]);
+
+    // Weight delta for selected range
+    const weightDelta = useMemo(() => {
+        if (filtered.length < 2) return null;
+        const sorted = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
+        const raw = sorted[0].weight - sorted[sorted.length - 1].weight; // positive = lost
+        return { amount: Math.round(Math.abs(raw) * 10) / 10, lost: raw > 0 };
+    }, [filtered]);
 
     // Derived stats
     const latestLabel = todayEntry ? `${todayEntry.weight} ${unitLabel}` : '--';
@@ -206,6 +221,17 @@ export default function WeightTracker({
                     </button>
                 ))}
             </div>
+
+            {/* Weight delta stat */}
+            {weightDelta && (
+                <div className="mt-2 text-sm text-zinc-500">
+                    {weightDelta.lost ? 'Lost' : 'Gained'}{' '}
+                    <span className={weightDelta.lost ? 'text-green-500' : 'text-red-400'}>
+                        {weightDelta.amount} {unitLabel}
+                    </span>{' '}
+                    {RANGE_LABEL[range]}
+                </div>
+            )}
 
             {/* Chart */}
             <div className="mt-4 h-64 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 p-3">

@@ -1,0 +1,2 @@
+i want to add a new feature to the weight tracker. lets add a new field that shows how much weight
+ lost in the selected time frame. so like "lost x in the last x days" or "lost x all time"

@@ -117,7 +117,8 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         } else {
             const parsed = JSON.parse(lastSavedItems);
             const hasUnknown = parsed.some(
-                (item: FoodLog) => item.calories === 'unknown' || item.calories === null
+                (item: FoodLog & { calories: unknown }) =>
+                    item.calories === 'unknown' || item.calories === null
             );
             if (hasUnknown) {
                 hydrateFromDB();

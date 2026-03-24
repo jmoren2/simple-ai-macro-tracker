@@ -26,6 +26,8 @@ jobs:
                   context: .
                   push: true
                   tags: ghcr.io/${{ github.repository_owner }}/simple-ai-macro-tracker:latest
+                  build-args: |
+                      SHTAI_API_URL=${{ secrets.SHTAI_API_URL }}
 
             - name: Notify NAS to deploy
               env:

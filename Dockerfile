@@ -14,6 +14,8 @@ RUN npm install
 COPY . .
 
 # Build Next.js
+ARG SHTAI_API_URL
+ENV SHTAI_API_URL=$SHTAI_API_URL
 RUN npm run build
 
 # Final run stage

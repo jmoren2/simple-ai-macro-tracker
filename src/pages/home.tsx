@@ -117,7 +117,7 @@ export default function Home({ user, dailyTotals, weights, apiUrl }: Props) {
         } else {
             const parsed = JSON.parse(lastSavedItems);
             const hasUnknown = parsed.some(
-                (item: FoodLog & { calories: unknown }) =>
+                (item: Omit<FoodLog, 'calories'> & { calories: unknown }) =>
                     item.calories === 'unknown' || item.calories === null
             );
             if (hasUnknown) {
